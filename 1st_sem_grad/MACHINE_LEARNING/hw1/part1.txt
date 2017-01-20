@@ -1,0 +1,264 @@
+1.        (A or B) and C
+	
+	if A
+		if B
+			if C
+				class = 0
+			if !C
+				class = 0
+		if !B
+			if C
+				class = 1
+			if !C 
+				class = 0
+	if !A 
+		if B
+			if C
+				class = 1
+			if !C
+				class = 0
+		if !B 
+			if C
+				class = 0
+			if !C 
+				class = 0 
+
+1.b      A xor B (either not both)
+
+	if A
+		if B
+			class = 0
+		if !B
+			class = 1
+	if !A
+		if B
+			class = 1
+		if !B
+			class = 0
+
+1.c 	A and !B and !C and D 
+	if A
+		if B
+			if C 
+				if D
+					class = 0
+				if !D
+					class = 0
+			if !C
+				if D
+					class = 0
+				if !D
+					class = 0
+		if !B
+			if C
+				if D
+					class = 0
+				if !D
+					class =0
+			if !C
+				if D
+					class = 1
+				if !D
+					class =0
+	if !A
+		if B
+			if C
+				if D
+					class = 0
+				if !D
+					class = 0
+			if !C
+				if D
+					class =0
+				if !D
+					class = 0
+		if !B
+			if C
+				if D
+					class = 0
+				if !D
+					class = 0
+			if !C
+				if D
+					class = 0
+				if !D
+					class =0
+
+2.a
+Action, Age, Color, Size
+
+if Action 0 = x:
+	if Age 
+
+1.d - Information gain = the expected error of using the partitioned attribute. 
+1.e - Majority Error of all cases:
+	Action 
+		Stretch ME = 1 - max ( 8/8, 0 ) = 0
+		Dip ME = 1 - max ( 4/12, 8/12) = 4/12 = 1/3 = 0.3333
+		gain = 0.4 + 0 -12/20*0.3333 = 0.6000
+	Size
+		Small ME = 1 - max ( 6/10, 4/10) = 4/10 = 2/5 = 0.4000
+		Large ME = 1 - max ( 6/10, 4/10) = 2/5= 0.4000
+		gain = 0.4 + 10/20*0.4 - 10/20*0.4 = 0.4000
+	Age
+		Adult ME = 1- max ( 8/8,  0) = 0 
+		Child ME = 1 - max ( 4/12, 8/12) = 4/12 = 1/3= 0.3333
+		gain = 0.6
+	Color
+		Yellow ME = 1 - max ( 6/10, 4/10) = 4/10 = 2/5= 0.4000
+		Purple ME = 1 - max ( 6/10, 4/10) =  2/5= 0.4000
+		gain = 0.4000
+
+	MEtotal = 1-max(8/20, 12/20) = 8/20 = 0.4000
+
+	Best to split on the Action node or the Age node. Because highest gain
+	Node 1 = Age
+		Adult ME = 0 
+		
+		Child 
+			Action
+				dip = 1 - max( 0, 8/8) = 0
+				stretch = 1 - max( 4/4, 0)  = 0 
+			Size
+				large = 1 - max( 2/6, 4/6) = 2/6 = 1/3= 0.3333
+				small = 1 - max( 2/6, 4/6) = 2/6 = 1/3= 0.3333
+			Color
+				yellow = 1 - max( 2/6, 4/6) = 2/6 = 1/3= 0.3333
+				purple = 1 - max( 2/6, 4/6) = 2/6 = 1/3= 0.3333
+				
+	Best split on Action.. tree done 
+	
+1.3 Using first twelve examples from the balloon data
+	info gain = E(s) - (E(each attribute)) 
+	
+Using Entropy Heuristic 
+Problem2 
+GIVEN THE FIRST TWELVE EXAMPLES
+AGE
+entropyAdult = -1*log2(5/5) = 0 
+entropyChild = -3/7*log2(3/7) - 4/7*log2(4/7) = 0.9852
+gainAge = 0.9183 - 5/12*0 + 7/12*0.9852 = 0.3436
+ACTION
+entropyDip = -3/7*log2(3/7)-4/7*log2(4/7) = 0.9852
+entropyStretch = -1*log2(1) = 0 
+gainAction = 0.9183 - 7/12*0.9852 - 7/12*0 = 0.3436
+COLOR
+entropyYellow = -6/9*log2(6/9) - 3/9*log2(6/9) = 0.5850
+entropyPurple = -1*log(1) = 0
+gainColor = 0.9183 - 9/12*0.585 - 9/12*0 = 0.4796
+SIZE
+entropyLarge = -5/7*log2(5/7) - 2/7*log2(2/7) = 0.8631
+entropySmall = -3/5*log2(3/5) - 2/5*log2(2/5) = 0.9710
+gainSize = 0.9183 - 7/12*0.8631 - 5/12*0.9710 = 0.0102
+TOTAL 
+totalEntropy = -8/12*log2(8/12) - 4/12*log2(4/12) = 0.9183
+
+	SPLIT ON COLOR -> highest
+	split on color if purple, true; else: 
+	AGE
+	color_entropyAdult = -4/4*log2(4/4) - 0 = 0
+	color_entropyChild = -2/6*log2(2/6) - 4/6*log2(4/6) = 0.9183
+	gain_c_entropyAge = 0.9710 - (0 + 6/10*0.9183) = 0.2364
+	SIZE
+	color_entropySmall = -3/5*log2(3/5) - 2/5*log2(2/5) = 0.9710
+	color_entropyLarge = -3/5*log2(3/5) - 2/5*log2(2/5) = 0.9710
+	gain_c_entropySize = 0.9710 - (5/10*0.9710 + 5/10*0.9710) = 0 
+	ACTION
+	color_entropyDip = -2/6*log2(2/6) - 4/6*log2(4/6) = 0.9183
+	color_entropyStretch = -4/4*log2(4/4) - 0 = 0
+	gain_c_entropyAction = 0.9710 - (6/10*0.9183 + 4/10*0) = 0.4200
+
+	color_totalEntropy = -6/10*log2(6/10) - 4/10*log2(4/10) = 0.9710
+
+		SPLIT ON ACTION -> highest information gain
+		if stretch true, else:
+		AGE
+		ca_entropyAdult = -2/2*log2(2/2) - 0 = 0
+		ca_entropyChild = -0 -4/4*log2(4/4) = 0
+		gain_ca_AGE = 0.9183 - (0+0*(4/4)) = 0.9183 
+		SIZE
+		ca_entropyLarge = -1/3*log2(1/3) - 2/3*log2(2/3) = 0.9183
+		ca_entropySmall = -1/3*log2(1/3) - 2/3*log2(2/3) = 0.9183
+		gain_ca_SIZE = 0.9183 - ( 3/6*0.9183 + 3/6*0.9183) = 0 
+
+		ca_totalEntropy = -2/6*log2(2/6) - 4/6*log2(4/6) = 0.9183
+
+Using Majority Error Heuristic
+	total Majority Error = 1 - max(8/12, 4/12) = 4/12 = 0.3333
+	Color
+		Yellow = 1 - max(6/10, 4/10) = 4/10 = 0.4
+		Purple = 1 - max(2/2,0) = 0 
+		gain = 0.3333 - 0.4*10/12 + 0 = ~ 0 
+	Size
+		Small = 1 - max(5/7, 2/7) = 2/7 = 0.2857
+		Large = 1 - max(3/5, 2/5) = 2/5 = 0.4
+		gain = 0.3333 - 0.2857*7/12 + 5/12*0.4= 0.3333
+	Action
+		Stretch = 1 - max(6/6, 6/6) = 0
+		Dip = 1 - max(2/6,4/6) = 2/6 = 0.333
+		gain = 0.3333 - 0 + 6/12*0.3333= 0.500
+	Age
+		Adult = 1 - max(5/5,5/5) = 0 
+		Child = 1 - max(3/7,4/7) = 3/7= 0.4286
+		gain = 0.3333 - 0.4286*7/12 = 0.0833
+
+		Split on Action.
+		Total = 1- max(2/6,4/6) = 2/6 = 0.3333
+		Color
+			Yellow = 1 - max(2/6,4/6) = 2/6 = 0.3333
+			Purple = 0 
+			gain = 0.3333 - 0.3333*6/6 = 0 
+		Size
+			small = 1 - max(1/3,2/3) = 1/3 = 0.3333
+			large = 1 - max( 1/3, 2/3) = 1/3 = 0.3333
+			gain = 0.3333 - (0.3333+0.3333) = -0.3333
+		Age
+			adult = 1 - max( 1,0) = 0 
+			child = 1 - max(0,1) = 0
+			gain = 0.3333 - 0 = 0.3333 
+		split on age, color will yeild similar results  
+
+	0/20 error rate for the majority error rate
+	4/20 error rate for the entropy error rate
+
+
+PART 2 - Nearest Neighbor
+
+2.1 - Use the euclidean distance to find the voroni diagram of the 3 labels. 
+Find the midpoint between important boundaries, draw a line normal to this point, break when lines overlap and form a polyhedron. This gives you the decision boundary. 
+	BA1   = -1+1/2, -1+1/2 = (0,0) 
+	BA-1 =  -1+1/2, -1-1/2 = (0,-1)
+	BC     = -1+2/2, -1-2/2 = (-0.5, -1.5) 
+	CA    =  1+2/2, 1--2/2 = (1.5,1.5)
+	CA-1 =   1+2/2, -1-2/2 = (1.5, -1.5)
+2.2 - Use the Manhattan distance measure for the 3 labels and 3 points
+	AB = |1+1|+|1+1|=4
+	AC = |-1-2|+|-1+2|=4
+	BC = |1-2|+|1+2|=4
+	The  distance is equadistant from each neighbor 
+2.3
+	Score(A) = Sum(1/d(xi, x)) 
+	x1 = (1,1) = A
+	x2 = (1,-1) = A 
+	x3 = (-1,-1) = B 
+	x4 = (2,-2) = C
+	We find the classification by using the equation:
+
+	 W = 1/d(x1,x) + 1/d(x2,x) + 1/d(x3/x) + 1/d(x4,x) 
+
+	 W	=1/sqrt((1-4)^2-(1-0)^2) +
+	 	1/sqrt((1-4)^2-(-1-0)^2) +
+	 	1/sqrt((-1-4)^2-(-1-0)^2) +
+	 	1/sqrt((2-4)^2-(-2-0)^2) = 1.1821 
+
+
+
+
+
+
+
+
+
+
+
+

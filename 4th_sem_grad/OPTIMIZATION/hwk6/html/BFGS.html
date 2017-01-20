@@ -1,0 +1,247 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>BFGS, quasi newton method</title><meta name="generator" content="MATLAB 8.3"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-10-20"><meta name="DC.source" content="BFGS.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>BFGS, quasi newton method</h1><pre class="codeinput"><span class="comment">%</span>
+<span class="comment">%</span>
+<span class="comment">% The ls parameter for the last resort may need to be</span>
+<span class="comment">% changed to 5. Converges well in this case.</span>
+
+<span class="comment">% function [result] = BFGS (x,y)</span>
+clear; clc; close <span class="string">all</span>;
+d = 2;
+x = [-1;0;2;2];
+x = [-1;0];
+p = zeros(d,1);
+g = zeros(d,1);
+s = zeros(d,1);
+y = zeros(d,1);
+r = zeros(d,1);
+k= 1;
+b = 5;
+st = 0.1;
+[X,Y] = meshgrid(-5:st:5, -5:st:5);
+z=(1.5-X+X*Y').^2+(2.25-X+X*Y'.^2).^2+(2.625-X+X*Y'.^3).^2;
+contour(X,Y,z,50,<span class="string">'ShowText'</span>,<span class="string">'off'</span>);
+hold <span class="string">on</span>;
+scatter(x(1,:),x(2,:));
+plot(x(1,:),x(2,:));
+scatter(3,1/2,<span class="string">'xk'</span>);
+title(<span class="string">'BFGS method'</span>);
+eps = 1e-2;
+H = eye(2)+1e-1;
+
+<span class="comment">% x = [-1;0;0;0];</span>
+x = [-1;0];
+<span class="comment">% ls parameters:</span>
+ai = 0.01; a_1 = 1e-6; alpha = 1; track = x;
+
+<span class="keyword">while</span> norm( fi_(x(:,k)) ) &gt; eps &amp;&amp; k~=50
+
+<span class="comment">%     H = inv(H);</span>
+    p(:,k) = -H*fi_(x(:,k));  <span class="comment">%search direction p</span>
+
+    alpha = ls(x(:,k),track,alpha,a_1,H)
+<span class="comment">%     alpha = power(1/k,1e-4);</span>
+<span class="comment">%     if k &lt;= 2</span>
+<span class="comment">%         alpha = 1e-2;</span>
+<span class="comment">%     else</span>
+<span class="comment">%         alpha = 1e-3;</span>
+<span class="comment">%     end</span>
+    a_1 = alpha;
+    track = x(:,k);
+
+    x(:,k+1) = x(:,k)+alpha*p(:,k);
+<span class="comment">%     s(:,k) = x(:,k+1)-x(:,k);</span>
+    s(:,k) = alpha*p(:,k);<span class="comment">%same result as above line.</span>
+
+    g(:,k) = fi_(x(:,k));
+    g(:,k+1) = fi_(x(:,k+1));
+
+    y(:,k) = g(:,k+1)-g(:,k);
+    r = 1/(y(:,k)'*s(:,k));
+
+    <span class="comment">%BFGS part</span>
+    psy = r*s(:,k)*y(:,k)';
+    pys = r*y(:,k)*s(:,k)';
+    H = (eye(size(H))-psy)*H*(eye(size(H))-pys)+r*s(:,k)*s(:,k)';
+    k = k+1;
+
+    scatter(x(1,:),x(2,:));
+    plot(x(1,:),x(2,:));
+    fx(k) = function1(x(:,k));
+<span class="keyword">end</span>
+
+<span class="comment">% b = 10;</span>
+<span class="comment">% st = 0.1;</span>
+<span class="comment">% [X,Y] = meshgrid(-b/2:st:b/2, -b:st:b);</span>
+<span class="comment">%</span>
+<span class="comment">% z=100*(Y-X.^2).^2+(1-X).^2;</span>
+<span class="comment">%</span>
+<span class="comment">% contour(X,Y,z,50,'ShowText','off');</span>
+<span class="comment">% hold on;</span>
+<span class="comment">% scatter(x(1,:),x(2,:));</span>
+<span class="comment">% plot(x(1,:),x(2,:));</span>
+<span class="comment">% title('BFGS method');</span>
+<span class="comment">% hold off;</span>
+figure()
+plot(fx);
+</pre><pre class="codeoutput error">Attempted to access a(3); index out of bounds because numel(a)=2.
+Error in fi_ (line 16)
+x1 = a(1); x2 = a(2); x3 = a(3); x4 = a(4); 
+Error in BFGS (line 38)
+while norm( fi_(x(:,k)) ) &gt; eps &amp;&amp; k~=50</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2014a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% BFGS, quasi newton method 
+% 
+
+% 
+% 
+% The ls parameter for the last resort may need to be 
+% changed to 5. Converges well in this case. 
+
+% function [result] = BFGS (x,y)
+clear; clc; close all; 
+d = 2; 
+x = [-1;0;2;2]; 
+x = [-1;0];
+p = zeros(d,1); 
+g = zeros(d,1);
+s = zeros(d,1);
+y = zeros(d,1);
+r = zeros(d,1); 
+k= 1;
+b = 5;
+st = 0.1; 
+[X,Y] = meshgrid(-5:st:5, -5:st:5);
+z=(1.5-X+X*Y').^2+(2.25-X+X*Y'.^2).^2+(2.625-X+X*Y'.^3).^2; 
+contour(X,Y,z,50,'ShowText','off');
+hold on;
+scatter(x(1,:),x(2,:)); 
+plot(x(1,:),x(2,:)); 
+scatter(3,1/2,'xk'); 
+title('BFGS method'); 
+eps = 1e-2;
+H = eye(2)+1e-1; 
+
+% x = [-1;0;0;0]; 
+x = [-1;0]; 
+% ls parameters: 
+ai = 0.01; a_1 = 1e-6; alpha = 1; track = x; 
+
+while norm( fi_(x(:,k)) ) > eps && k~=50
+    
+%     H = inv(H); 
+    p(:,k) = -H*fi_(x(:,k));  %search direction p 
+    
+    alpha = ls(x(:,k),track,alpha,a_1,H)
+%     alpha = power(1/k,1e-4);
+%     if k <= 2   
+%         alpha = 1e-2;
+%     else 
+%         alpha = 1e-3; 
+%     end 
+    a_1 = alpha; 
+    track = x(:,k); 
+    
+    x(:,k+1) = x(:,k)+alpha*p(:,k);
+%     s(:,k) = x(:,k+1)-x(:,k);
+    s(:,k) = alpha*p(:,k);%same result as above line. 
+    
+    g(:,k) = fi_(x(:,k));
+    g(:,k+1) = fi_(x(:,k+1)); 
+    
+    y(:,k) = g(:,k+1)-g(:,k);
+    r = 1/(y(:,k)'*s(:,k)); 
+    
+    %BFGS part 
+    psy = r*s(:,k)*y(:,k)'; 
+    pys = r*y(:,k)*s(:,k)'; 
+    H = (eye(size(H))-psy)*H*(eye(size(H))-pys)+r*s(:,k)*s(:,k)'; 
+    k = k+1; 
+    
+    scatter(x(1,:),x(2,:)); 
+    plot(x(1,:),x(2,:)); 
+    fx(k) = function1(x(:,k)); 
+end 
+
+% b = 10;
+% st = 0.1; 
+% [X,Y] = meshgrid(-b/2:st:b/2, -b:st:b);
+% 
+% z=100*(Y-X.^2).^2+(1-X).^2; 
+% 
+% contour(X,Y,z,50,'ShowText','off');
+% hold on;
+% scatter(x(1,:),x(2,:)); 
+% plot(x(1,:),x(2,:)); 
+% title('BFGS method'); 
+% hold off; 
+figure() 
+plot(fx); 
+##### SOURCE END #####
+--></body></html>

@@ -1,0 +1,343 @@
+---
+title: "Hm2"
+author: "BenLarson"
+date: "March 20, 2016"
+output: pdf_document
+---
+Homework 2 
+
+```{r setup}
+# script.dir <- dirname(sys.frame(1)$ofile)
+require(knitr)
+opts_knit$set(root.dir= '.')
+```
+
+```{r, echo=FALSE}
+print(getwd()) 
+data = read.csv('RiskFactors.csv')
+source('H2a.R')
+income = createCPT.fromData(data,'income')
+exercise = createCPT.fromData(data,c('exercise','income')) 
+smoke = createCPT.fromData(data,c('smoke','income'))
+bmi = createCPT.fromData(data,c('bmi','income','exercise'))
+bp = createCPT.fromData(data,c('bp','exercise','income','smoke'))
+cholesterol=createCPT.fromData(data,c('cholesterol','exercise','income','smoke'))
+angina = createCPT.fromData(data,c('angina','cholesterol','bp','bmi'))
+stroke = createCPT.fromData(data,c('stroke','bmi','bp','cholesterol'))
+attack = createCPT.fromData(data,c('attack','bmi','bp','cholesterol'))
+diabetes = createCPT.fromData(data,c('diabetes','bmi'))
+
+riskfactor = list('income'=income,'exercise'=exercise,'smoke'=smoke,
+                  'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'angina'=angina,
+                  'stroke'=stroke,'attack'=attack,'diabetes'=diabetes)
+
+#Part 1 ------------------------------- -------------------------------
+#find the number of probabilities for network
+networkprobs = 0
+for (i in riskfactor)
+{
+  networkprobs = networkprobs + length(i[['probs']])
+}
+print (networkprobs)
+
+# find the joint prb tables
+tmp = riskfactor[[1]] 
+for (i in seq(2,length(riskfactor),1))
+{
+  tmp = productFactor(riskfactor[[i]],tmp)
+}
+print(length(tmp[['probs']]))
+```
+Bayesian networks were created by using the paths in the RiskFactorData. Each net contained the node and its parents. If a node had a parent it was added to the bayenet that is used throughout the homework. A node was created by using the createCPT.fromData function using the data and a list of it's parent nodes. This gives us probaility tables that we can now do analysis on. I found there were 504 probabilities needed for the table. This was found by summing the rows (probs column) of each node and adding them the nodes totals together. There were 32,768 probabilites in the joint distribution. The joint distribution was found by using the productFactor function to multiply every node and it's possible columns together. 
+```{r kable, echo=FALSE}
+#Part 2 ------------------------------- -------------------------------
+#### infer = function(bayesnet, margVars, obsVars, obsVals)
+#bad habits 
+diabetesnet = list('income'=income,'bmi'=bmi,'diabetes'=diabetes,'exercise'=exercise)
+strokenet   = list('income'=income,'exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'stroke'=stroke)
+heartnet    = list('income'=income,'exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'attack'=attack)
+anginanet   = list('income'=income,'exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'angina'=angina)
+
+kable(infer(diabetesnet,c('bmi','income'), c('smoke','exercise'), c(1,2)) )
+kable(infer(strokenet, c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(1,2)))
+kable(infer(heartnet , c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(1,2)))
+kable(infer(anginanet, c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(1,2)))
+```
+
+```{r}
+```
+Above tables are for bad habits and the resulting probabilities for diabetes, stroke, heart attack, and agnina. 
+```{r}
+kable(infer(diabetesnet,c('bmi','income'), c('smoke','exercise'), c(2,1)) ) 
+kable(infer(strokenet, c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(2,1)))
+kable(infer(heartnet , c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(2,1)))
+kable(infer(anginanet, c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(2,1)))
+```
+
+```{r}
+```
+Above tables are for good habits and the resulting probabilities for diabetes, stroke, heart attack, and agnina. Note please ignore the double table for angina... I'm unable to stop this. 
+```{r}
+kable(infer(diabetesnet,c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(3,1,1)))
+kable(infer(strokenet, c('smoke','income','exercise'), c('bmi','bp','cholesterol'),  c(3,1,1)))
+kable(infer(heartnet,  c('smoke','income','exercise'), c('bmi','bp','cholesterol'),  c(3,1,1)))
+kable(infer(anginanet, c('smoke','income','exercise'), c('bmi','bp','cholesterol'),  c(3,1,1)))
+```
+
+```{r}
+```
+Above tables are for poor health and the resulting probabilities for diabetes, stroke, heart attack, and agnina. 
+```{r}
+kable(infer(diabetesnet,c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(2,3,2)))
+kable(infer(strokenet,  c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(2,3,2)))
+kable(infer(heartnet,  c('smoke','income','exercise'), c('bmi','bp','cholesterol'),  c(2,3,2)))
+kable(infer(anginanet, c('smoke','income','exercise'), c('bmi','bp','cholesterol'),  c(2,3,2)))
+```
+
+```{r}
+```
+Above tables are for good health and the resulting probabilities for diabetes, stroke, heart attack, and agnina. 
+```{r, echo=FALSE}
+#Part 3 ------------------------------- -------------------------------
+diabetesnet = list('bmi'=bmi,'exercise'=exercise,'diabetes'=diabetes)
+tmp = diabetesnet[[1]] 
+for (i in seq(2,length(diabetesnet),1))
+{tmp = productFactor(diabetesnet[[i]],tmp)}
+tmp = marginalize(list(tmp), c('bmi','exercise'))
+tmp = tmp[[1]]
+plot(c(1,2,3,4,5,6,7,8),tmp[ which(tmp[['diabetes']]==1),'probs']) 
+
+strokenet=list('exercise'=exercise,'smoke'=smoke,'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'stroke'=stroke)
+tmp = strokenet[[1]] 
+for (i in seq(2,length(strokenet),1))
+{tmp = productFactor(strokenet[[i]],tmp)}
+tmp = marginalize(list(tmp), c('bmi','exercise','cholesterol','bp','smoke'))
+tmp = tmp[[1]]
+plot(c(1,2,3,4,5,6,7,8),tmp[ which(tmp[['stroke']]==1),'probs']) 
+
+heartnet    = list('exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'attack'=attack)
+tmp = heartnet[[1]] 
+for (i in seq(2,length(heartnet),1))
+{tmp = productFactor(heartnet[[i]],tmp)}
+tmp = marginalize(list(tmp), c('bmi','exercise','cholesterol','bp','smoke'))
+tmp = tmp[[1]]
+plot(c(1,2,3,4,5,6,7,8),tmp[ which(tmp[['attack']]==1),'probs']) 
+
+anginanet   = list('exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'angina'=angina)
+tmp = anginanet[[1]] 
+for (i in seq(2,length(anginanet),1))
+{tmp = productFactor(anginanet[[i]],tmp)}
+tmp = marginalize(list(tmp), c('bmi','exercise','cholesterol','bp','smoke'))
+tmp = tmp[[1]]
+plot(c(1,2,3,4,5,6,7,8),tmp[ which(tmp[['angina']]==1),'probs']) 
+
+```
+The above plots are evaluate the probability of someones income on the probability they have one of the four health outcomes. This is found by evaluating the joint probability of the respective nets, and then marginalizing out the factors that aren't income and then plotting. It is overwhelmingly obvious that the higher your income the more likely you are to avoid the health problems we are considering. Suprisingly the plot isn't linear. The lowest income, 1, has a slightly less probability that than 2.
+  The assumption that the missing links between exercise and smoking and the health outcomes is that smoking and exercise conditionally change other nodes. Considering the path from the health outcomes to smoking and exercise we see that they are not conditionally independent. If the parent to a health outcome is observed who's parent is smoking or exercise then the health outcomes are conditionally independent of smoking or exercise. So informally it is saying that smoking and exercise aren't direct factors in health problems. 
+```{r , echo=FALSE}
+#Part 4 ------------------------------- -------------------------------
+#add smoke and exercise to all nets 
+
+angina = createCPT.fromData(data,c('angina','cholesterol','bp','bmi','smoke','exercise'))#added edge
+stroke = createCPT.fromData(data,c('stroke','bmi','bp','cholesterol','smoke','exercise'))#added edge
+attack = createCPT.fromData(data,c('attack','bmi','bp','cholesterol','smoke','exercise'))#added edge
+diabetes = createCPT.fromData(data,c('diabetes','bmi','smoke','exercise'))#added edge
+
+diabetesnet = list('income'=income,'bmi'=bmi,'diabetes'=diabetes,'exercise'=exercise,'smoke'=smoke)
+strokenet   = list('income'=income,'exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'stroke'=stroke)
+heartnet    = list('income'=income,'exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'attack'=attack)
+anginanet   = list('income'=income,'exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,'bp'=bp,'cholesterol'=cholesterol,'angina'=angina)
+
+kable(infer(diabetesnet,c('bmi','income'), c('smoke','exercise'), c(1,2)) )
+kable(infer(strokenet, c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(1,2)) )
+kable(infer(heartnet , c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(1,2)) )
+kable(infer(anginanet, c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(1,2)) )
+```
+
+```{r}
+```
+Above tables with bad habits. Directly linking smoking and exercise to the health factors. 
+```{r, echo=FALSE}
+kable(infer(diabetesnet,c('bmi','income'), c('smoke','exercise'), c(2,1)) ) 
+kable(infer(strokenet, c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(2,1)))
+kable(infer(heartnet , c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(2,1)))
+kable(infer(anginanet, c('bmi','income','cholesterol','bp'),c('smoke','exercise'), c(2,1)))
+#b poor health  
+```
+
+```{r}
+```
+Above tables with good habits. Directly linking smoking and exercise to the health factors. 
+```{r, echo=FALSE}
+kable(infer(diabetesnet,c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(3,1,1)) )
+kable(infer(strokenet, c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(3,1,1)) )
+kable(infer(heartnet,  c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(3,1,1)) )
+kable(infer(anginanet, c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(3,1,1)) )
+```
+
+```{r}
+```
+Above tables with bad health. Directly linking smoking and exercise to the health factors. 
+```{r, echo=FALSE}
+#b good health, low blood, low cholest, normal weight 
+kable(infer(diabetesnet,c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(2,3,2)) )
+kable(infer(strokenet,  c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(2,3,2)) )
+kable(infer(heartnet,  c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(2,3,2)) )
+kable(infer(anginanet, c('smoke','income','exercise'), c('bmi','bp','cholesterol'), c(2,3,2)) )
+```
+
+```{r}
+```
+Above tables with good health. Directly linking smoking and exercise to the health factors. 
+
+Looking at the tables and comparing the probability of not having health issues increases with good habits and good health compared to bad habits and poor health. Overall we see that adding the link of exercise and smoking increases the probability of not having health problems with good habits and good health. This intuitively makes sense. This suggests that the links do have a direct correlation with habits and health with health outcomes.
+  The assumptions in the first graph were still valid, but not as accurate. They were created in a way that smoking and exercise only had an effect on bmi, bp, and cholesterol. There are possibly numerous other factors that smoking and exercise could effect that effects the health outcomes. 
+  
+  The lack of edges between health outcomes is indicating that the outcomes are independent of each other. While intuitively we know that diabetes can effect your probability of having many other health issues. 
+
+```{r, echo=FALSE}
+
+```
+
+```{r, echo=FALSE}
+#Part 5 ------------------------------- -------------------------------
+#added edge to stroke 
+stroke2 = createCPT.fromData(data,c('stroke','bmi','bp','cholesterol','smoke','exercise','diabetes'))
+strokenet2   = list('income'=income,'exercise'=exercise,'smoke'=smoke, 'bmi'=bmi,
+                   'bp'=bp,'cholesterol'=cholesterol,'stroke'=stroke,'diabetes'=diabetes)
+
+# tmp = strokenet[[1]] 
+# for (i in seq(2,length(strokenet),1))
+# {tmp = productFactor(strokenet[[i]],tmp)}
+# tmp = marginalize(list(tmp), c('bmi','exercise','cholesterol','bp','smoke','income'))
+# tmp = tmp[[1]]
+tmp = infer(strokenet,c('bmi','exercise','cholesterol','bp','smoke','income'),c('diabetes'),c(1))
+# kable( tmp[ which(tmp[['stroke']]==1),'probs'] )
+kable(tmp) 
+# 
+# tmp = strokenet2[[1]] 
+# for (i in seq(2,length(strokenet2),1))
+# {tmp = productFactor(strokenet2[[i]],tmp)}
+# tmp = marginalize(list(tmp), c('bmi','exercise','cholesterol','bp','smoke','income'))
+# tmp = tmp[[1]]
+# kable(tmp[ which(tmp[['stroke']]==1),'probs'] )
+tmp = infer(strokenet2,c('bmi','exercise','cholesterol','bp','smoke','income'),c('diabetes'),c(1))
+kable(tmp)
+
+# tmp = strokenet[[1]] 
+# for (i in seq(2,length(strokenet),1))
+# {tmp = productFactor(strokenet[[i]],tmp)}
+# tmp = marginalize(list(tmp), c('bmi','exercise','cholesterol','bp','smoke','income'))
+# tmp = tmp[[1]]
+# kable(tmp[ which(tmp[['stroke']]==1),'probs'] )
+tmp = infer(strokenet,c('bmi','exercise','cholesterol','bp','smoke','income'),c('diabetes'),c(3))
+kable(tmp)
+
+# tmp = strokenet2[[1]] 
+# for (i in seq(2,length(strokenet2),1))
+# {tmp = productFactor(strokenet2[[i]],tmp)}
+# tmp = marginalize(list(tmp), c('bmi','exercise','cholesterol','bp','smoke','income'))
+# tmp = tmp[[1]]
+# kable(tmp[ which(tmp[['stroke']]==1),'probs'] )
+tmp = infer(strokenet2,c('bmi','exercise','cholesterol','bp','smoke','income'),c('diabetes'),c(3))
+kable(tmp)
+```
+
+
+We see that having diabetes doesn't effect our first and third table. This makes sense because there is no path between them. We see that having a stroke is not depedent on diabetes. 
+The interesting tables are the second and fourth. In these tables we see that having diabetes does, in fact, increase our risk for a stroke. This is a very small difference, but it did affect our results. 
+
+```{r}
+####################################
+## Simple chain example: x -> y -> z
+####################################
+x = createCPT(list("x"), probs = c(0.3, 0.7), levelsList = list(c("T", "F")))
+y.x = createCPT(list("y", "x"), probs = c(0.8, 0.4, 0.2, 0.6),
+                levelsList = list(c("T", "F"), c("T", "F")))
+z.y = createCPT(list("z", "y"), probs = c(0.5, 0.6, 0.5, 0.4),
+                levelsList = list(c("T", "F"), c("T", "F")))
+
+(xyzNet = list("x" = x, "y" = y.x, "z" = z.y))
+
+# Some simple operations you might try to check your code
+productFactor(x, y.x)
+productFactor(productFactor(x, y.x), z.y)
+marginalizeFactor(productFactor(x, y.x), "x")
+marginalizeFactor(productFactor(y.x, z.y), "z")
+
+# Notice in the observe function, you just need to delete rows that are
+# inconsistent with the given observations. Factors do not need to be combined
+# or normalized in this step.
+observe(xyzNet, "x", "T")
+observe(xyzNet, c("x", "y"), c("T", "T"))
+
+# Marginalize must first combine all factors involving the variable to
+# marginalize. Again, this operation may lead to factors that aren't
+# probabilities.
+marginalize(xyzNet, "x")
+marginalize(xyzNet, "y")
+marginalize(xyzNet, "z")
+marginalize(xyzNet, c("x", "z"))
+
+#############################
+## Bishop book (Ch 8) example
+#############################
+b = createCPT(list("battery"), probs = c(0.9, 0.1), levelsList = list(c(1, 0)))
+f = createCPT(list("fuel"), probs = c(0.9, 0.1), levelsList = list(c(1, 0)))
+g.bf = createCPT(list("gauge", "battery", "fuel"),
+                 probs = c(0.8, 0.2, 0.2, 0.1, 0.2, 0.8, 0.8, 0.9),
+                 levelsList = list(c(1, 0), c(1, 0), c(1, 0)))
+
+carNet = list("battery" = b, "fuel" = f, "gauge" = g.bf)
+
+## Some examples:
+## Notice that different order of operations give the same answer
+## (rows/columns may be permuted)
+productFactor(productFactor(b, f), g.bf)
+productFactor(productFactor(g.bf, f), b)
+
+marginalizeFactor(productFactor(g.bf, b), "gauge")
+productFactor(marginalizeFactor(g.bf, "gauge"), b)
+
+productFactor(marginalizeFactor(productFactor(g.bf, b), "battery"), f)
+marginalizeFactor(productFactor(productFactor(g.bf, f), b), "battery")
+
+marginalizeFactor(productFactor(marginalizeFactor(productFactor(g.bf, b), "battery"), f), "gauge")
+marginalizeFactor(productFactor(marginalizeFactor(productFactor(g.bf, b), "battery"), f), "fuel")
+
+# ## Examples computed in book (see pg. 377)
+infer(carNet, c("battery", "fuel"), NULL, NULL)     ## (8.30)
+infer(carNet, c("battery"), "fuel", 0)              ## (8.31)
+infer(carNet, c("battery"), "gauge", 0)             ## (8.32)
+infer(carNet, NULL, c("gauge", "battery"), c(0, 0)) ## (8.33)
+
+###########################################################################
+## Kevin Murphy's Example: http://www.cs.ubc.ca/~murphyk/Bayes/bnintro.html
+########################################################r###################
+c = createCPT(list("cloudy"), probs = c(0.5, 0.5),
+              levelsList = list(c("F", "T")))
+r.c = createCPT(list("rain", "cloudy"), probs = c(0.8, 0.2, 0.2, 0.8),
+                levelsList = list(c("F", "T"), c("F", "T")))
+s.c = createCPT(c("sprinkler", "cloudy"), probs = c(0.5, 0.9, 0.5, 0.1),
+                levelsList = list(c("F", "T"), c("F", "T")))
+w.sr = createCPT(list("wet", "sprinkler", "rain"),
+                 probs = c(1, 0.1, 0.1, 0.01, 0, 0.9, 0.9, 0.99),
+                 levelsList = list(c("F", "T"), c("F", "T"), c("F", "T")))
+
+grassNet = list("cloudy" = c, "rain" = r.c, "sprinkler" = s.c, "wet" = w.sr)
+
+## Test your infer() method by replicating the computations on the website!!
+
+
+###########################################################################
+## Class example
+###########################################################################
+traffic = createCPT(list("traffic"), probs = c(0.5, 0.5), levelsList = list(c("F", "T")))
+alarm = createCPT(list("alarm"), probs = c(0.5, 0.5), levelsList = list(c("F", "T")))
+late = createCPT(list("late", "alarm", "traffic"),
+                 probs = c(0.8, 0.2, 0.8, 0.6, 0.2, 0.8, 0.2, 0.4),
+                 levelsList = list(c("F", "T"), c("F", "T"), c("F", "T")))
+
+lateNet = list(traffic, alarm, late)
+
+```

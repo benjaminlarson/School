@@ -1,0 +1,245 @@
+™---
+title: "Homework 1"
+author: "BenLarson"
+date: "February 13, 2016"
+output: html_document
+---
+
+
+#1 Expectation of Sufficient Statistics 
+a.Show that E[T(X)|$\eta$] = $\triangledown(A(\eta))$  
+  Start with the identity:  
+ $$ \int p(x) = 1  $$
+  $$ p(x) = h(x)*exp(\eta T(X)-A(\eta)) = 1 $$   
+  We take the derivate of the integral with repsect to $\eta$ to simplify the integral. 
+  $$ \frac{d}{d\eta} \int{h(x)*exp(\eta T(X)-A(\eta))} = \frac{d}{d\eta}1  $$
+  $$ \int{ \frac{d}{d\eta} h(x)*exp(\eta T(X)-A(\eta))} =\frac{d}{d\eta} 1 $$ 
+  Chain rule gives us the original function multiplied by the derivative of the terms in the exponent. 
+  $$ \int{ h(x)*exp(\eta T(X)-A(\eta)) * (T(X) - A'(\eta))}dx = 0 $$ 
+  $$ E[T(X)] - A'(\eta) = 0 $$
+  $$ E[T(X)] = A'(\eta) $$
+b. Verify with the for Gaussian distribution with unknown $\mu$ and known $\sigma^2$.  
+  $$ N(\mu,\sigma^2) = \frac{1}{\sqrt{2\pi}*\sigma}e^{-\frac{(x-\mu)^2}{2\sigma^2}} $$ 
+  We drop the normalizing constants for easy math:
+  $$ = e^{-\frac{1}{2\sigma^2}(x^2+2x\mu+\mu^2)} $$
+  $$ = e^{-\frac{x^2}{2\sigma^2}-\frac{2x\mu}{2\sigma^2}-\frac{\mu^2}{2\sigma^2}} $$ 
+  We now find the components that are in the exponential family, and find the parameters:
+  $$ C = \frac{-x^2}{2\sigma^2}  B = \frac{-2\mu x}{2\sigma^2}  A = \frac{=\mu^2}{2\sigma^2} $$
+  We seperate the parts have have a square with the parameter, constant with parameter and no parameter into their respective components. 
+  $$ h(x) = \frac{-x^2}{2\sigma^2} \\  T(x) = \frac{x}{\sigma} $$ 
+  $$ A(\eta) = \frac{\mu^2}{2\sigma^2}  \\ \eta = \frac{\mu}{\sigma} $$  
+  We can now compare our gaussian with the formula above:
+  $$ E(x|\mu) = \mu $$ T(x) = x and $\eta = \mu$ for a gaussian distribution,   
+  $$ A'(\eta) = \frac{d}{d\mu}\frac{\mu^2}{2\sigma^2} = \frac{2\mu}{2\sigma^2} = \mu $$
+  if we consider $\sigma$ to be 1. Our equations are therefor correct. 
+  
+------------------------------------------------------------------------------------   
+#2 Noninformative priors for the poisson distribution 
+a. rewrite in exponential family form:  
+$$  P(X=k; \lambda) = \frac{\lambda^k e^{-\lambda}}{k!} $$ 
+$$ = exp(ln(\frac{\lambda^k e^{-\lambda}}{k!})) $$
+$$ = exp(ln(\lambda^k)-\lambda-ln(k!)) $$
+$$ = exp(k *ln(\lambda)-\lambda-ln(k!)) $$
+Now that the formula is in exponential faimly form, we can find teh sufficient statistic T(X) and natural parameter $\eta$. 
+$$ A(\lambda) = k*ln(\lambda) \\ \eta= -\lambda \\ T(x) = -ln(k!) $$
+
+b. 2 different non-informative priors for $p(\lambda)$.   
+b.1  uniform distribution from $\lambda \in [0,k)$. We assume this is plausible because we can't have negative events happening, which is what he poison distribution is modeling.   
+b.2  Jererys' prior: 
+$$ p(\lambda) = \sqrt{I(\lambda)} = \sqrt{E[\frac{d}{d\lambda} ln(p(x|\lambda))]^2} $$
+an alternate definition is given by:
+$$ p(\lambda) = \sqrt{I(\lambda)} = \sqrt{E[\frac{d^2}{d^2\lambda} ln(p(x|\lambda))]} $$
+from the definiton in our textbook (Gelman et al, Bayesian Data Analysis, pg 88) which I found easier to compute
+$$\sqrt{E[\frac{d^2}{d^2\lambda} ln(p(x|\lambda))]} = \sqrt{E[\frac{d^2}{d^2\lambda} ln(\frac{\lambda^k e^{-k}}{k!})]}= \sqrt{E[\frac{d^2}{d^2\lambda} k*ln(\lambda)+ln(e^{-\lambda})-ln(k!)]} $$
+$$ \sqrt{E[\frac{d}{d\lambda} \frac{k}{\lambda}-1 -0]} = \sqrt{E[\frac{1}{\lambda^2}|\lambda]} = \sqrt{\frac{\lambda}{\lambda^2}} = \sqrt{\frac{1}{\lambda}} $$ 
+the last step follows from the conditional expectation:
+$$E[\frac{d^2}{d^2\lambda} ln(p(x|\lambda))|\lambda] = \frac{\lambda}{\lambda^2} $$
+c. Posteriors for the 2 prior options:   
+Uniform prior(0,$k$) $\frac{1}{0-k}$
+$$ \int \frac{\lambda^k e^{-\lambda}}{k!} * \frac{1}{0-\inf} = \int \frac{\lambda^k e^{-\lambda}}{k!} * \frac{1}{k} = \frac{1}{-k} poisson(\lambda) $$ 1/-k being the normalizing factor. 
+
+Poisson posterior with Jeffreys' prior:
+$$ \int \frac{(\lambda)^k e^{-(\lambda)}}{k!} \frac{1}{(\lambda)^{1/2}} = \frac{1}{k!} \int (\lambda)^{k-1/2} e^{-\lambda} d\lambda $$ 
+= gamma distribution = 
+$$\frac{(\beta)^{alpha}}{\Gamma(\alpha)}=(\lambda)^{\alpha-1}e^{-\beta\lambda} $$
+$$ \alpha = k+\frac{1}{2} \\ \beta = 1 $$
+ 
+ 
+#3 Non-Conjugate Priors, What is the posterior pdf $p(\mu|x_i;\sigma^2,a,b)$
+
+
+uniform distribution = $\frac{1}{b-a}$ wich is our prior distribution for paramter $\mu$   
+normal distribution = 
+$$ \prod e^{\frac{1}{2\sigma^2}(xi-\mu)^2} = e^{\frac{1}{2\sigma^2}^n(\sum_{i=0}^n{x_i-\mu)^2}} $$ 
+Which is our likelihood function for the data X given parameters $\mu,\sigma$ 
+
+$$ \frac{\frac{1}{b-a}*e^{\frac{1}{2\sigma^2}^n(\sum_{i=0}^n{xi-\mu)^2}}}{\int_{-\infty}^{\infty}  e^{(\frac{1}{2\sigma^2})^n(\sum_{i=0}^n{x_i-\mu)^2}}d\mu }$$
+
+#Coding Part
+
+#4
+a. What is the joint posterior density? 
+  To get the joint posterior density we multiply the likelihood function $N(\mu_j,\sigma^2_j)$ by the prior $p(\mu_j,\sigma^2_j)$
+  $$ p(\mu_j,\sigma^2_j|y_{ij})=N(\mu,\sigma)*INV(\alpha,\beta) $$
+  $$ = (\sigma^2)^{\frac{1}{2}} \sigma^{-n/2-\alpha-1} e^{ \frac{-1}{2\sigma^2} \sum{x_i-mu}^2+n_0 \mu^2-2n_0\mu_0\mu+n_0\mu_0^2+2\beta} $$
+  The marginal posterior density over sigma?
+  https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution
+  To get the marginal posterior density we just integrate over the parameter we are seeking:
+  $$p(\sigma^2_j|y_{ij}) =  \int p(\mu_j\sigma_j|y_{ij})d\sigma_j^2$$ Which we find is an inverse gamma distribution:
+  $$ f(x;\alpha, \beta) = \frac{(\beta)^\alpha}{\Gamma(\alpha)}x^{-\alpha-1}e^{\frac{-\beta}{x}} $$
+  
+b. The marginal posterior density for mu
+$$ p(\mu_j|y_{ij}) = \int p(\mu_j\sigma_j|y_{ij})d\mu_j^2 $$ is a t distribution
+$$f(t) = \frac{\Gamma(\frac{v+1}{2})}{\sqrt{v \pi}\Gamma\frac{v}{2}}(1+\frac{t^2}{v})^{\frac{-v-1}{2}} $$ 
+
+c. Random variable $d_{12}=\mu_1-\mu_2$. We can find $d_{12}$ by just subtracting the distributions for $\mu_1$ and $\mu_2$. We got our parameter from a normal distributed gaussian so:
+$$ p(d_{12}|\sigma^2_1,\sigma^2_2,y_{ij} = $$
+
+# I did not get results that I expected. I have documented my code hoping for partial credit 
+First I used the code given to setup the data into 3 groups. 
+```{r}
+## Read in the cross-sectional OASIS data, including hippocampal volumes
+x = read.csv("/Users/Benjamin/Documents/PROBMOD/Hwk2/oasis_cross-sectional.csv")
+y = read.csv("/Users/Benjamin/Documents/PROBMOD/Hwk2/oasis_hippocampus.csv")
+hippo = merge(x, y, by = "ID")
+
+## Let's look at only elderly subjects
+hippo = hippo[hippo$Age >= 60,]
+rownames(hippo) = NULL
+
+## Create three categories of subjects according to dementia level (from CDR)
+## Controls: CDR = 0, Mild Dementia: CDR = 0.5, Dementia: CDR >= 1.0
+hippo$Group[hippo$CDR == 0.0] = "Control"
+hippo$Group[hippo$CDR == 0.5] = "Mild"
+hippo$Group[hippo$CDR >= 1.0] = "Dementia"
+hippo$Group = factor(hippo$Group, levels=c("Control", "Mild", "Dementia"))
+
+## Here are some example plots of the data
+# ggplot(hippo, aes(x = RightHippoVol, fill = Group)) + geom_density(alpha=0.5)
+# boxplot(RightHippoVol ~ Group, data = hippo)
+
+u1 = mean(hippo[which(hippo$Group=="Control"),"RightHippoVol"])
+u2 = mean(hippo[which(hippo$Group=="Mild"),"RightHippoVol"])
+u3 = mean(hippo[which(hippo$Group=="Dementia"),"RightHippoVol"])
+s1 = var(hippo[which(hippo$Group=="Control"),"RightHippoVol"])
+s2 = var(hippo[which(hippo$Group=="Mild"),"RightHippoVol"])
+s3 = var(hippo[which(hippo$Group=="Dementia"),"RightHippoVol"])
+n1 = hippo[which(hippo$Group=="Control"),"RightHippoVol"]
+n2 = hippo[which(hippo$Group=="Mild"),"RightHippoVol"]
+n3 = hippo[which(hippo$Group=="Dementia"),"RightHippoVol"]
+bn = hippo[,"RightHippoVol"] 
+```
+Dinverse gamma distribution using x as input, and alpha beta parameters, given to us from class website. 
+```{r}
+## Density function for Inverse Gamma: conjugate prior for Gaussian sigma^2
+dinvgamma = function(x, alpha, beta)
+{
+  # beta^alpha / gamma(alpha) * x^(-alpha - 1) * exp(-beta / x)
+  alpha*log(beta)-log(gamma(alpha))+(-alpha - 1)*log(x) + -beta / x
+}
+```
+Normal Inverse Gamma, This is where I suspect errors in my code. This function takes m, s which are 2 arrays to solve over, which gives you a two dimensional matrix using hyper parameters as instructed in the homework for the prior distriubtion of $\mu, \sigma$. This function was used for the prior. 
+```{r}
+## Density function for Normal-Inverse-Gamma
+## with parameters mu0, lambda, alpha, beta
+dninvg = function(m, s, mu0 = 0, lambda = 10e-6, alpha = 10e-6, beta = 10e-6)
+{
+  dnorm(m, mean = mu0, sd = sqrt(s / lambda)) * dinvgamma(s, alpha, beta)
+}
+# dninvg = function(n, mu0 = 0, lambda = 10e-6, alpha = 10e-6, beta = 10e-6)
+# {
+#   dnorm(n, mean = mu0, sd = rinvgamma(n,alpha,beta)*lambda^2)
+# }
+```
+This functions solves for the likelihood function for Y = $N(x,\mu,\sigma^2)$. Input was the data. Log was taken to simplify the math and keep the exponents from being 0 or NA as was the case. 
+```{r}
+## Likelihood function
+gausslik = function(x, sigmaSqr)
+{
+  gn = length(x)
+  # gn*log(sum(1 / sqrt(2 * pi * sigmaSqr)^(gn/2))) * -sum(x^2) / (2 * sigmaSqr)
+  # r = 1 / (2 * pi * sigmaSqr)^(gn/2) * exp(-sum(x^2) / (2 * sigmaSqr))
+#   -log(r) 
+   -1*((gn/2)*log(1 / (2 * pi * sigmaSqr))+ (-sum(x^2) - (2*sigmaSqr)))
+}
+```
+This is the function I used to find the posterior distribution. My reasoning was that the prior*likelihood would find the posterior distriubtion for $\mu,\sigma^2$ given the data. I created 2 arrays m and s that would hopefully store the posterior distribution. I used -2$\sigma:2\sigma$ window centering on either the mean or var of the entire dataset. I'm not sure my parameters were right here. We see that the prior distribution in the histogram below. It doesn't seem right to me that the range is [1.2e-16, 1.21e-16], but I'm not sure what to expect here. 
+```{r}
+## Density function for Posterior Distribution P(u,var)
+postInv = function(n)
+{
+  nn = length(n) 
+#   sd = sqrt(var(bn))
+  m = seq(-1,1,1/10e2)
+  s = seq(3*10e-6-1,3*10e-6+1,(6*10e-6)/10e2)
+  
+  mu0 = (nn*mean(n) + 10e-6*0)/(10e-6+nn)
+  lambda = 10e-6+nn
+  alpha = 10e-6+nn/2
+  beta = 10e-6+1/2*sum(n^2)+1/2*(10-6*0^2)-1/2*((nn*mean(n)+0)/(nn+10e-6))^2
+  print(alpha)
+  print(beta) 
+  m = seq(10e-6,beta,1)
+  s = seq(10e-6,alpha,1e6)
+  f.iso = outer(m,s,mu0,lambda,alpha,beta,FUN=dninvg)
+  # x = rnorm(length(n),mean=,sd=s)
+  gausslik(n, sigmaS = var(n))*f.iso
+}
+#just for plotting the prior dist. 
+n = n1
+m = seq(mean(bn)-2*sqrt(var(bn)),mean(bn)+2*sqrt(var(bn)),1)/mean(bn)
+s = seq(var(bn)-2*sqrt(var(bn)),var(bn)+2*sqrt(var(bn)),1)/var(bn) 
+t = dninvg(m,s) 
+hist(t, main = paste("Histogram of Prior")) 
+```
+I now tried to find the marginal posterior function by $\int p(\mu,\sigma^2|y)d\mu$. Basically I summed all the columns (from the posterior dist matrix) into 1 row, because that would be the equivalent of a distribution of $\sum^{\mu} p(\mu,\sigma^2|y) = p(\sigma|y)$. The following contour plot is a clear indicator that my posterior distributino is not correct. I'm getting a flat line, rather than some sort of rounded contoured gaussian that I would expect. 
+```{r}
+samplePostMargVar = function(amount,data){
+  x.iso = postInv(data)
+  x.iso = colSums(x.iso)
+  sample(x = x.iso, amount, replace=TRUE)
+}
+contour(m, s, postInv(n1), asp = 1)
+```
+The same reasoning and setup for mariginalizing $p(\mu|y)$ I just summed the rows together from the posterior density matrix. 
+```{r}
+samplePostMargMean = function(amount,s,data){
+  postInv(data,s)
+  x.iso = postInv(data,s)
+  x.iso = rowSums(x.iso)
+  sample(x = x.iso, amount, replace=TRUE)
+}
+```
+Plotting histogram of the marginal posterior density  $p(\sigma_1|y_{i1})$
+```{r}
+# Attempt to plot data 
+x.iso = postInv(n1)
+x.iso = colSums(x.iso)
+psf_s1 = samplePostMargVar(10e6,n1)
+hist(psf_s1, prob =TRUE, main = paste("Histogram of Marginal p(sigma_1 | y_{i1}) "))
+# # hist(psf_s1, col = 'blue', freq=FALSE)
+lines(density(psf_s1),col = 'red', lwd=2)
+abline(v = s1, col = 'black', lwd = 5)
+```
+Plot the posterior marginal distriubtions $p(\mu_1|y_{i1})$, $p(\mu_2|y_{i2})$, and $p(\mu_3|y_{i3})$
+```{r}
+x.iso = postInv(n1)
+x.iso = rowSums(x.iso)
+
+x2.iso = postInv(n2)
+x2.iso = rowSums(x2.iso)
+
+x3.iso = postInv(n3)
+x3.iso = rowSums(x3.iso)
+
+plot(x.iso, main = "Marginal PDF for mu_1")
+abline(h = u1, col = 'black', lwd = 5)
+plot.new()
+frame()
+plot(x2.iso, main = "Marginal PDF for mu_2")
+abline(h = u1, col = 'black', lwd = 5)
+plot.new()
+frame()
+plot(x3.iso, main = "Marginal PDF for mu_3")
+abline(h = u1, col = 'black', lwd = 5)
+```

@@ -1,0 +1,128 @@
+\documentclass[7pt]{article}
+\usepackage[left=1in, right=1in, top=1in, bottom=1in]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{caption} 
+\author{Ben Larson}
+\title{Homework 7 }
+\date{Nov 2, 2016} 
+\begin{document}
+	\maketitle
+	\section{Redo of homework 6, Lagrange Multipliers}
+	$$ min \sum_i a_i^2x_i  \verb|subject to  | \sum_i \frac{1}{x_i-B}=\frac{1}{C} $$
+	We first setup the Lagrangian equation and solve for the $\lambda$. We then plug this $\lambda$ back into the constraint equations to find x. 
+	$$ L = \sum_i a_i^2x_i -\lambda(\frac{1}{x_i-B}-\frac{1}{C}) $$ 
+	Differentiate and set equal to zero:
+	$$\frac{dL}{dx} = \sum_i a_i^2+ \frac{\lambda}{(\sum_i x_i-B)^2} =0 $$
+	solve for x: 
+	$$ a_i  = -\frac{\sqrt{\lambda}}{x_i-B} $$
+	$$ -(x_i-B)a_i = \sqrt{\lambda}$$ 
+	$$x_i = B+\frac{\sqrt{\lambda}}{a_i} $$Solve for lambda, plug $x_i$ into constraint equations:
+	$$ \sum{\frac{1}{x_i-B}-\frac{1}{C}} = 0  $$
+	$$ \sum_i x_i+\frac{\sqrt{\lambda}}{a_i}-B = C $$
+	$$ \sqrt{\lambda} = C \sum_ia_i$$
+	Finally we plug in this $\sqrt{\lambda}$ back into the $x_i$ equation. 
+	$$ x_i = B+\frac{C\sum_i a_i}{a_i} $$
+	We now multiply by $a_i^2$
+	$$ \sum_i a_i^2x_i = b\sum_ia_i^2+c\sum_ia_i^2 $$
+	\section{KKT conditions}
+	$$\min  x_1^2+x_2^2 +2ax_1x_2 $$
+	$$\verb|SubjectTo  ||x_1|+|x_2|\le 1| $$
+	We define the Lagrangian as:
+	$$ L = x_1^2+x_2^2+2ax_1x_2+\lambda(|x_1|+|x_2|-1) $$
+	We differentiate and set equal to zero, and set up the KKT conditions: 
+		\begin{enumerate}
+		\item$\frac{d}{dx} = 2x_1 +2ax_2+\lambda=0$\\
+		\item$\frac{d}{dy} = 2x_2 +2ax1 +\lambda=0$
+		\item $\lambda(|x_1|+|x_2|-1)=0$
+		\item$\lambda  \ge 0 $
+		\item $|x_1|+|x_2| \le 1 $
+	\end{enumerate}
+Consider the case when $\lambda =0$ and solve the lagrangain equations for x: 
+$$2x_1+2ax_2=0 $$\\
+and 
+$$2x_2+2ax_1=0$$\\
+This gives us: $x_1(a-1) = x_2(a-1) $ and $ |x_1| +|x_1| = 1 $ we can solve for: 
+$$|x_1| = \frac{1}{2} $$  
+$$|x_2| = \frac{1}{2} $$ 
+Solving for $\lambda$ in equation 1 or 2 we get $|1-a|$.We consider the values that follows our constraints: \\
+\[
+\begin{bmatrix}
+	x_1 & x_2 & \lambda\\
+	\frac{1}{2}&\frac{1}{2} & -1-a\\
+	-\frac{1}{2}&-\frac{1}{2}& 1+a\\
+	\frac{1}{2}&-\frac{1}{2} & -1+a\\
+	-\frac{1}{2}&\frac{1}{2} & 1-a
+\end{bmatrix}
+	\]
+	So our kkt conditions, and hence our optimal solution, are dependent on our choice of a. Our choice of a must keep $\lambda \ge 0$. 
+	\section{Linear Programming}
+	This problem closely follows class notes from Thurs Oct 6.
+	$$ \min x^TAx \verb|   Subject to:   | x^Tx =1 $$
+	We start by writing the lagrangian equations; set $x^tx = a^tx$ with a in the constraint equation, b is ommited in the equations as it is just a vector of ones and will not change the result (as far as I could see): 
+	$$ L = x^TAx+\lambda^T(a^tx -1) $$
+	$$ \triangledown L = Ax + a\lambda = 0$$ 
+	$$ x =-A^{-1}a\lambda $$ 
+	from $a^Tx = 1$ we get 
+	$$a^Tx = a^TA^{-1}a\lambda = 1 $$
+	$$ \lambda = (a^TA^{-1}a)^{-1}$$
+	We plug this $\lambda$ into our equation for x to get:
+	$$x = A^{-1}a\lambda = A^{-1}a(a^TA^{-1}a) $$ 
+	$$a^tx -1 = (a^TA^{-1}a)(a^TA^{-1}a)^{-1} = 1 $$
+	$$ L = x^tAx = (a^tA^{-1}(a^TA^{-1}AA^{-1}a)(a^TA^{-1}a)^{-1} = (a^tA^{-1}a)^{-1}$$
+	
+	\section{Min and Duel}
+	Note, I'm not sure I'm treating the $a$ properly in this problem. I'm not sure how to deal with an inequality in the constraint, solving for the duel. I followed the example/theory of the book Example 12.10. They seem to just use equalities and I'm not sure why. 
+	\subsection{min} 
+		$$\min_{x\in R^3} \sum_{i=1}^3 (x_i^2+x_i)$$
+		$$ \verb|   subject to  | x_1-x_2+2x_3=1 \verb| and | 2x_1+x_2-3x_3\le a$$
+		\[ L = \sum_{i=1}^3 (x_i^2+x_i) -\lambda(x_1 -x_2+2x_3-1) - \mu(2x_1+x_2-3x_3-a) \]
+		Take derivatives of L, we can list our KKT conditions: 
+		\begin{enumerate}
+		\item$\triangledown_{x_1} = 2x_1 +1-\lambda_1 -2\mu_2 = 0$ 
+		\item$\triangledown_{x_2} = 2x_2 +1 +\lambda_1 -\mu_2 = 0 $
+		\item$\triangledown_{x_3} = 2x_3 +1 -2\lambda_1-3\mu_2 = 0 $
+			\item $\lambda(x_1-x_2+2x_3-1) = 0 $
+			\item $\mu(2x_1+x_2-3x_3-a) = 0$
+			\item $\mu \ge 0 $
+			\item $\lambda \ge 0$
+		\end{enumerate}
+		Then solving for x from the previous equations, we then list out our KKT conditions: 
+		$$ x1 =-\frac{1}{2} +\frac{\lambda}{2}+\mu $$
+		$$ x2 =-\frac{1}{2} -\frac{\lambda}{2}+\frac{\mu}{2} $$
+		$$ x3 =-\frac{1}{2} +\lambda+\frac{3\mu}{2} $$
+		
+		We can now plug these values into the constraint equations $x_1-x_2+2x_3=1 \verb| and | 2x_1+x_2-3x_3 \le a$ to solve for $\lambda$
+		$$(-\frac{1}{2} +\frac{\lambda}{2}+\mu)-(-\frac{1}{2} -\frac{\lambda}{2}+\frac{\mu}{2})+2(\frac{1}{2} +\lambda+\frac{3\mu}{2} )=1 $$
+		$$3\lambda-\frac{7}{2}\mu =2 $$
+		$$2(-\frac{1}{2} +\frac{\lambda}{2}+\mu )+(-\frac{1}{2} -\frac{\lambda}{2}+\frac{\mu}{2})-3(-\frac{1}{2} +\lambda+\frac{3\mu}{2}  $$
+		$$-\frac{\lambda}{2}-2\mu \le a-3 $$
+		solving for $\lambda$ from the two simplified equations above we get:
+		$$ \lambda = 6+\frac{21\mu}{2} $$
+		Plug in $\lambda$ back into our equations for x we get: 
+		$$ x_1 = -\frac{5}{2}+\frac{29}{4}\mu$$
+		$$ x_2 = -\frac{7}{2}+\frac{25}{4}\mu$$
+		$$ x_3 = \frac{11}{2} +10\mu$$
+		We then consider values of $\mu$ that would satisfy all of the KKT conditions above.(I didn't not finish this part).
+		\subsection{dual}
+		For a dual we transform the objective function to a max (if primal was a min) and optimize over $\lambda$.
+			\[ L = \sum_{i=1}^3 (x_i^2+x_i) -\lambda(x_1 -x_2+2x_3-1) - \mu(2x_1+x_2-3x_3-a) \]
+			Take derivatives of L, we can list our partial derivatives: 
+			\begin{enumerate}
+				\item$\triangledown_{x_1} = 2x_1 +1-\lambda_1 -2\mu_2 = 0$ 
+				\item$\triangledown_{x_2} = 2x_2 +1 +\lambda_1 -\mu_2 = 0 $
+				\item$\triangledown_{x_3} = 2x_3 +1 -2\lambda_1-3\mu_2 = 0 $
+			\end{enumerate}
+			Solving for x we get: 
+				$$ x1 =-\frac{1}{2} +\frac{\lambda}{2}+\mu $$
+				$$ x2 =-\frac{1}{2} -\frac{\lambda}{2}+\frac{\mu}{2} $$
+				$$ x3 =-\frac{1}{2} +\lambda+\frac{3\mu}{2} $$
+				To obtain dual objective we plug these values into the Lagrangian. 
+				\[ L = \sum_{i=1}^3 (x_i^2+x_i) -\lambda(x_1 -x_2+2x_3-1) - \mu(2x_1+x_2-3x_3-a) \]
+				Using wolframalpha to plug in the values and simplify the tedious algebra we get: 
+				$$ \max_{\lambda,\mu} \big(\frac{3\lambda^2}{2}+\frac{7\lambda\mu}{2}+\frac{7\mu^2}{2}-\frac{3}{4}\big)$$
+				$$\verb assuming:  \lambda \ge 0 , \mu\ge 0$$
+		\end{document} 

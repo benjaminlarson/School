@@ -1,0 +1,10 @@
+3.3  Experiments 
+
+1)  experiment 2 data set made 5 mistakes. Output was w = [0.1429, 0.5685, 0.5852, 0.6686]
+
+2)
+Mistakes for 1 pass through adult dataset: 
+perceptronF = 510
+perceptronMargin = 526 
+perceptronAgg = 428
+

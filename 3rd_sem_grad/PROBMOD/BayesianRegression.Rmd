@@ -1,0 +1,106 @@
+```{R}
+library(knitr)
+library(ggplot2)
+require(knitr)
+require(gplots)
+## Sample size
+n = 30
+
+## True regression coefficients (beta0 + beta1 * x + beta2 * x^2 + ...)
+trueBeta = c(1, -3, 0, 5, 0, 0, 0, 0, 0, 0, 0)
+d = length(trueBeta)
+
+## Generate some random x values and the X data matrix
+a = -2
+b = 2
+x = runif(n, a, b)
+X = cbind(rep(1, n), x, x^2, x^3, x^4, x^5, x^6, x^7, x^8, x^9, x^10)
+
+## Generate dependent variable: y = X * beta + noise
+sigma = 10
+eps = rnorm(n, mean = 0, sd = sigma)
+y = X %*% trueBeta + eps
+
+## Plot everything
+## Plotting variable (x-axis)
+t = seq(a, b, 0.01)
+m = length(t)
+T = cbind(rep(1, m), t, t^2, t^3, t^4, t^5, t^6, t^7, t^8, t^9, t^10)
+
+plot(x, y, xlim = c(a,b), ylim = range(y, T%*%trueBeta),
+     main = "Simulated Input Data")
+
+plot(x, y, xlim = c(a,b), ylim = range(y, T%*%trueBeta),
+     main = "Linear OLS Regression")
+lines(t, T %*% trueBeta, col='red', lwd=3)
+abline(lm(y ~ x), col = 'black', lwd=3)
+legend("topleft", c("True f(x)", "Linear OLS"),
+       col = c("red", "black"), lwd=3)
+
+## Least-squares estimate of beta (MLE under Gaussian noise)
+betaHat = as.vector(solve(t(X) %*% X, t(X) %*% y))
+
+plot(x, y, xlim = c(a,b), ylim = range(y, T%*%trueBeta),
+     main = "OLS Regression")
+lines(t, T %*% trueBeta, col='red', lwd=3)
+lines(t, T %*% betaHat, col='blue', lwd=3)
+legend("topleft", c("True f(x)", "10th-order OLS"),
+       col = c("red", "blue"), lwd=3)
+
+print(betaHat)
+
+## Now do the Bayesian version (ridge regression)
+## Prior precision
+lambda = diag(1, d, d)
+
+## Posterior covariance
+SigmaPost = sigma^2 * solve(t(X) %*% X + sigma^2 * lambda)
+betaPost = sigma^(-2) * as.vector(SigmaPost %*% (t(X) %*% y))
+
+plot(x, y, xlim = c(a,b), ylim = range(y, T%*%trueBeta),
+     main = "Bayesian Regression")
+lines(t, T %*% trueBeta, col='red', lwd=3)
+lines(t, T %*% betaHat, col='blue', lwd=3)
+lines(t, T %*% betaPost, col='magenta', lwd=3)
+legend("topleft", c("True f(x)", "OLS Estimate", "Bayesian Regression"),
+       col = c("red", "blue", "magenta"), lwd=3)
+
+print(betaPost)
+
+
+## Plot 95% credible interval of beta
+# z = 1.96 * sqrt(diag(SigmaPost))
+# plotCI(x = betaPost, uiw = z, lwd = 2,
+#        ylim = range(betaPost + z, betaPost - z, trueBeta),
+#        main = "95% Credible Interval", xlab = "index", ylab = paste(expression(beta)))
+# points(trueBeta, lwd = 2, col = 'red')
+# legend("topright", c("Posterior Estimate", "True Value"),
+#        col = c("black", "red"), pch = 1, pt.lwd = 2)
+# 
+# ## Plot 95% posterior predictive interval
+# sigmaPred = sqrt(sigma^2 + apply((T %*% SigmaPost) * T, MARGIN = 1, FUN = sum))
+# 
+# ## Upper bound
+# top = T %*% betaPost + 1.96 * sigmaPred
+# 
+# ## Lower bound (in reverse direction - for plotting bottom of a filled polygon)
+# t.back = seq(b, a, -0.01)
+# bot = T %*% betaPost - 1.96 * sigmaPred
+# bot = bot[length(bot):1]
+# 
+# plot(x, y, xlim = c(a,b), ylim = range(y, bot, top),
+#      main = "95% Posterior Predictive Interval")
+# polygon(c(t, t.back), c(top, bot), col = rgb(0.5, 0.5, 0.5, 0.5), border = NA)
+# lines(t, T %*% betaPost, col = 'magenta', lwd=3)
+# lines(t, T %*% trueBeta, col='red', lwd=3)
+# legend("topleft", c("True f(x)", "Bayesian Regression", "Predictive Interval"),
+#        col = c("red", "magenta", rgb(0.5, 0.5, 0.5, 0.5)), lwd=c(3,3,10))
+# 
+# ## Generate some test data (not in training data) and see how they fall in the prediction
+# nt = 20
+# xt = runif(nt, a, b)
+# Xt = cbind(rep(1, nt), xt, xt^2, xt^3, xt^4, xt^5, xt^6, xt^7, xt^8, xt^9, xt^10)
+# yt = Xt %*% trueBeta + rnorm(nt, mean = 0, sd = sigma)
+# points(xt, yt, pch = 19)
+# legend("bottomright", c("Training Points", "Test Points"), pch = c(1, 19))
+```

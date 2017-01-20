@@ -1,0 +1,163 @@
+---
+title: "Gaussian Priors"
+author: "Tom Fletcher"
+date: "February 4, 2016"
+output:
+  html_document:
+    highlight: textmate
+    theme: readable
+  pdf_document: default
+---
+
+We have already seen the conjugate prior and Jeffreys' prior for the mean of a Gaussian. These notes cover priors for the variance of a Gaussian, as well as multiparameter priors for the joint mean and variance. You might also have a look at these notes by Kevin Murphy:
+
+<http://www.cs.ubc.ca/~murphyk/Papers/bayesGauss.pdf>
+
+## Conjugate Priors for the Gaussian Variance
+
+Recall that we have a general procedure for identifying conjugate priors whenever our likelihood is an exponential family. That is, when our likelihood is of the form
+$$p(x | \theta) = h(x) \exp(\eta(\theta) \cdot T(x) - A(\theta)),$$
+we know that a conjugate prior on the parameter $\theta$ is of the form
+$$p(\theta) \propto \exp(a \eta(\theta) - b A(\theta)),$$
+where $a$ and $b$ are constants.
+
+Now consider a Gaussian likelihood, with known mean $\mu$, and unknown variance $\sigma^2$. In other words, we will for the time being treat $\mu$ as a constant and $\theta = \sigma^2$ as our random variable. Then the exponential family for for this likelihood is
+$$p(x | \sigma^2) \propto \exp(\frac{1}{\sigma^2} \cdot \frac{(x-\mu)^2}{2} - \ln(\sigma^2)).$$
+So, we have
+$$
+\begin{aligned}
+\eta(\sigma^2) &= \frac{1}{\sigma^2},\\
+A(\sigma^2) &= \ln(\sigma^2).
+\end{aligned}
+$$
+This means that the conjugate prior for $\sigma^2$ is of the form:
+$$p(\sigma^2) \propto \left(\frac{1}{\sigma^2}\right)^b \exp\left( \frac{a}{\sigma^2} \right).$$
+
+This distribution is called the *inverse gamma distribution*. The pdf is more commonly written as follows (imagine $\theta = \sigma^2$):
+$$p(\theta; \alpha, \beta) = \frac{\beta^\alpha}{\Gamma(\alpha)} \theta^{-\alpha - 1} \exp \left( -\frac{\beta}{\theta} \right).$$
+This pdf is defined for $\theta > 0$, and the parameters must be positive, i.e., $\alpha > 0, \beta > 0$. The notation for this is $\theta \sim \text{Inv-Gamma}(\alpha, \beta)$. See the Wikipedia page for this distribution for more information.
+
+<https://en.wikipedia.org/wiki/Inverse-gamma_distribution>
+
+Another note about the inverse gamma is that if $\theta \sim \text{Inv-Gamma}(\alpha, \beta)$, then $\frac{1}{\theta} \sim \text{Gamma}(\alpha, \beta)$. This is where the name "inverse gamma" comes from! Note, here I'm using the "shape" and "rate" parameters for the gamma distribution. If we parameterize a Gaussian by it's precision $\tau = \frac{1}{\sigma^2}$, then the conjugate prior for $\tau$, would be a gamma distribution. For more information on the gamma distribution, see the Wikipedia page:
+
+<https://en.wikipedia.org/wiki/Gamma_distribution>
+
+Now let's plot the inverse gamma density function. R does not have a built in density function for the inverse gamma distribution, so we write one first:
+```{r}
+## Density function for Inverse Gamma: conjugate prior for Gaussian sigma^2
+dinvgamma = function(x, alpha, beta)
+{
+  beta^alpha / gamma(alpha) * x^(-alpha - 1) * exp(-beta / x)
+}
+```
+
+Now, let's plot the inverse gamma pdf for various values of its parameters, $\alpha, \beta$:
+```{r}
+## Plotting variable for sigma^2
+s = seq(0.01, 4, 0.01)
+
+## Plot a few IG densities
+plot(s, dinvgamma(s, 1, 1), type='l', ylim = c(0,1.4), lwd=3,
+     main = "Inverse Gamma Density", xlab = expression(sigma^2),
+     ylab = expression(paste("p(",sigma^2, ")")))
+lines(s, dinvgamma(s, 1, 2), col='red', lwd=3)
+lines(s, dinvgamma(s, 2, 1), col='blue', lwd=3)
+lines(s, dinvgamma(s, 4, 4), col='magenta', lwd=3)
+legend('topright', c("1, 1", "1, 2", "2, 1", "4, 4"),
+       col = c("black", "red", "blue", "magenta"), lwd = 3)
+```
+
+Finally, we work out what the posterior for $\sigma^2$ looks like. We know it is inverse gamma because of conjugacy, but what are the parameters? If the prior is of the form,
+$$\sigma^2 \sim \text{Inv-Gamma}(\alpha_0, \beta_0),$$
+then the posterior is given by
+$$
+\begin{aligned}
+p(\sigma^2 | x_1, \ldots, x_n) &\propto p(\sigma^2) \cdot \prod_{i=1}^n p(x_i | \sigma^2)\\
+&\propto \left(\frac{1}{\sigma^2}\right)^{\alpha_0 + 1}\exp\left( -\frac{\beta_0}{\sigma^2} \right) \prod_{i=1}^n \frac{1}{\sigma} \exp \left( -\frac{(x_i - \mu)^2}{2\sigma^2} \right) \\
+&= \left( \frac{1}{\sigma^2} \right)^{\alpha_0 + n/2 + 1} \exp \left( -\frac{1}{\sigma^2} \left( \beta_0 + \frac{1}{2} \sum_{i=1}^n (x_i - \mu)^2 \right) \right).
+\end{aligned}
+$$
+We can identify this is in the form of a inverse gamma distribution. That is,
+$$\sigma^2 | x_1, \ldots, x_n \sim \text{Inv-Gamma}\left(\alpha_0 + \frac{n}{2}, \beta_0 + \frac{1}{2} \sum_{i=1}^n (x_i - \mu)^2 \right).$$
+Notice that the prior can be interpreted as $2\alpha_0$ pseudo-observations, with sample variance equal to $\beta_0 / \alpha_0$.
+
+
+Here is R code comparing the Jeffreys' prior for $\sigma^2$ with the inverse gamma prior. In this example, we are choosing prior parameters that don't match the actual data very well! You may try playing with these parameters and see the effect they have. 
+```{r}
+## Gaussian likelihood of sigma^2, with mu = 0
+## x is a vector of data
+## sigma can be a vector (returns vector of same length)
+gauss.lik = function(x, sigmaSqr)
+{
+  n = length(x)
+  1 / (2 * pi * sigmaSqr)^(n/2) * exp(-sum(x^2) / (2 * sigmaSqr))
+}
+
+## Posterior for Gaussian sigma^2 using Jeffreys' prior, with mu = 0
+jeff.gauss.post = function(x, sigmaSqr)
+{
+  n = length(x)
+  dinvgamma(sigmaSqr, n/2, sum(x^2) / 2)
+}
+
+## Generate random Gaussian data (with sigma^2 = 1)
+## Assume we know mu = 0
+n = 50
+x = rnorm(n, mean = 0, sd = 1)
+
+## First, compute posterior under Jeffreys prior
+p.jeff = jeff.gauss.post(x, s)
+
+## Next, compute likelihood (scaled up for plotting purposes)
+lik = gauss.lik(x, s)
+lik = lik * max(p.jeff) / max(lik)
+
+## Finally, compute posterior for sigma^2 with an IG prior
+p.ig = dinvgamma(s, 20 + n/2, 40 + sum(x^2) / 2)
+
+## Plot them all
+plot(s, p.jeff, type='l', col='red', lwd=3, xlab = expression(sigma^2),
+     main = expression(bold(paste("Gaussian Posteriors for ", sigma^2))),
+     ylab = expression(paste("p(", sigma^2, "|", x, ")")),
+     ylim = c(0, max(p.jeff, lik, p.ig)))
+lines(s, lik, lwd=3)
+lines(s, p.ig, col='blue', lwd=3)
+lines(c(1, 1), c(0, 10), lwd=3, lty = 2)
+legend('topright', c("Likelihood", "Jeffreys", "Inverse Gamma"),
+       col = c("black", "red", "blue"), lwd = 3)
+```
+
+## Conjugate Priors for Joint Mean and Variance
+Next we look at the both the mean and variance of a Gaussian, i.e., $\theta = (\mu, \sigma^2)$. The conjugate prior in this case is the normal-inverse-gamma distribution. See the Wikipedia page:
+
+<https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution>
+
+Here is an R code example for what this distribution looks like.
+```{r}
+## Density function for Normal-Inverse-Gamma
+## with parameters mu0, lambda, alpha, beta
+dninvg = function(m, s, mu0 = 0, lambda = 1, alpha = 8, beta = 16)
+{
+  dnorm(m, mean = mu0, sd = sqrt(s / lambda)) * dinvgamma(s, alpha, beta)
+}
+
+## Create plotting axes (m, s) for mu and sigma^2
+m = seq(-4, 4, 0.05)
+s = seq(0.05, 5, 0.05)
+
+## outer function creates a 2D array of values,
+## evaluating our dninvg function on the (m, s) grid
+f.iso = outer(m, s, FUN = dninvg)
+
+## Here are two ways to plot a 2D function
+persp(m, s, f.iso, phi=50, theta=20)
+contour(m, s, f.iso, asp = 1)
+```
+
+This last bit of code does not run well inside of R markdown (because it brings up an interactive plot window). Run this in the R console instead.
+```{r}
+## Or use rgl package for interactive plot
+# library(rgl)
+# persp3d(m, s, f.iso, col = 'darkred')
+# ```

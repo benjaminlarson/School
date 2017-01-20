@@ -1,0 +1,12 @@
+\relax 
+\@writefile{toc}{\contentsline {section}{\numberline {1}6.4 Sherman-Morrison formula}{1}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Optimization for the Rosenbrock function}{1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Conjugate Gradient}{1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}BFGS}{2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}SR1}{2}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces In this method $H_0= I+10^3$ with alpha set constant rather than using a line search. Possible problems with the algorithm is search direction. It should not be moving up the gradient.}}{3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces In this conjugate gradient I used a line search to find the step size. Very wrong search direction. The search direction changed directions with initial $H_0=100, H_0=1000$. I saw both initial settings moving the up the gradient rather than down.}}{3}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces BFGS looked promising for a few iterations, then fails miserably, making a huge jump into the gradient. This is due to an error somewhere in the search direction because the H seems to be well behaved.}}{4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces BFGS this clearly shows a problem with the search direction. I haven't been able to find why this jump is happening. The algorithm uses $x_{k+1}= x_{k} + \alpha p$ to update x then even with forced small alpha the p jumps into enormous steps ruining any chance of optimal behavior. p is updated by H and gradient. }}{4}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces This algorithm has so many parameters I'm not sure what to say is causing a failure.}}{5}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces With this starting point, maybe it is marching towards a minimum, but it should do so quickly as this uses a trust region, and the step size should be updated to become larger.}}{5}}

@@ -1,0 +1,39 @@
+---
+title: "R Markdown Example"
+author: "Tom Fletcher"
+date: "January 12, 2016"
+output: html_document
+---
+
+The syntax below is how we insert a "chunk" of R code. The R code will appear formatted in the final document in a box, and if it produces text or a figure as output, that will appear after it in the document.
+
+```{r}
+summary(faithful)
+```
+
+Here is a plot example. Notice that `echo = FALSE` will prevent the code block from being printed in the document, but the output of the code (in this case a figure) will still appear.
+
+```{r, echo=FALSE}
+plot(faithful, main = "Old Faithful Data")
+```
+
+We can also include the result of an R command inside a line of text like this: The correlation between waiting time and eruption time in the Old Faithful data is `r cor(faithful$waiting, faithful$eruptions)`.
+
+Here is the output of a more involved command, linear regression on the Old Faithful data.
+
+```{r}
+model = lm(waiting ~ eruptions, data = faithful)
+summary(model)
+```
+
+Now we modify the plot above to include the regression line.
+
+```{r, echo=FALSE}
+plot(faithful, main = "Old Faithful Data")
+abline(model, col = 'red', lwd = 3)
+```
+
+We can also insert mathematical notation into our document using LaTeX like so:
+$$F(a) = \int_{-\infty}^a f(x) dx.$$
+
+You can also write inline mathematics: $e^{i \pi} = -1$.

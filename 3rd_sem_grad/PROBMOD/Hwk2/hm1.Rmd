@@ -1,0 +1,106 @@
+---
+title: "Posterior_Homework_1"
+author: "BenLarson"
+date: "February 17, 2016"
+output: html_document
+---
+```{r}
+## Read in the cross-sectional OASIS data, including hippocampal volumes
+x = read.csv("/Users/Benjamin/Documents/PROBMOD/Hwk2/oasis_cross-sectional.csv")
+y = read.csv("/Users/Benjamin/Documents/PROBMOD/Hwk2/oasis_hippocampus.csv")
+hippo = merge(x, y, by = "ID")
+
+## Let's look at only elderly subjects
+hippo = hippo[hippo$Age >= 60,]
+rownames(hippo) = NULL
+
+## Create three categories of subjects according to dementia level (from CDR)
+## Controls: CDR = 0, Mild Dementia: CDR = 0.5, Dementia: CDR >= 1.0
+hippo$Group[hippo$CDR == 0.0] = "Control"
+hippo$Group[hippo$CDR == 0.5] = "Mild"
+hippo$Group[hippo$CDR >= 1.0] = "Dementia"
+hippo$Group = factor(hippo$Group, levels=c("Control", "Mild", "Dementia"))
+
+## Here are some example plots of the data
+# ggplot(hippo, aes(x = RightHippoVol, fill = Group)) + geom_density(alpha=0.5)
+# boxplot(RightHippoVol ~ Group, data = hippo)
+
+u1 = mean(hippo[which(hippo$Group=="Control"),"RightHippoVol"])
+u2 = mean(hippo[which(hippo$Group=="Mild"),"RightHippoVol"])
+u3 = mean(hippo[which(hippo$Group=="Dementia"),"RightHippoVol"])
+s1 = var(hippo[which(hippo$Group=="Control"),"RightHippoVol"])
+s2 = var(hippo[which(hippo$Group=="Mild"),"RightHippoVol"])
+s3 = var(hippo[which(hippo$Group=="Dementia"),"RightHippoVol"])
+n1 = hippo[which(hippo$Group=="Control"),"RightHippoVol"]
+n2 = hippo[which(hippo$Group=="Mild"),"RightHippoVol"]
+n3 = hippo[which(hippo$Group=="Dementia"),"RightHippoVol"]
+bn = hippo[,"RightHippoVol"] 
+```
+
+```{r, echo=FALSE}
+dinvgamma = function(x, alpha, beta)
+{
+  # beta^alpha / gamma(alpha) * x^(-alpha - 1) * exp(-beta / x)
+  alpha*log(beta)-log(gamma(alpha))+(-alpha - 1)*log(x) + -beta / x
+}
+# x = seq(10e-7,10e-5,by=10e-7) 
+# y = dinvgamma(x,10e-6,10e-6)
+# plot(x,y) 
+# lines(y) 
+```
+
+
+```{r}
+dninvg = function(m, s, mu0 = 0, lambda = 10e-6, alpha = 10e-6, beta = 10e-6)
+{
+  dnorm(m, mean = mu0, sd = sqrt(s / lambda)) * dinvgamma(s, alpha, beta)
+}
+# s = seq(10e-7,10e-5,10e-7)
+# m = seq(-4,4,0.01) 
+# y = outer(m,s,FUN=dninvg)
+# contour(y, asp =.5)
+```
+
+```{r}
+gausslik = function(x, sigmaSqr)
+{
+  gn = length(x)
+  # 1 / (2 * pi * sigmaSqr)^(gn/2) * exp(-sum(x^2) / (2 * sigmaSqr))
+  -1*(gn/2) * log(1 / (2 * pi * sigmaSqr)) + (-sum(x^2)/(2*sigmaSqr))
+
+  }
+```
+
+```{r}
+postInv = function(n,m,s)
+{
+  nn = length(n) 
+  
+  mu0 = (nn*mean(n) + 10e-6*0)/(10e-6+nn)
+  lambda = 10e-6+nn
+  alpha = 10e-6+nn/2
+  beta = 10e-6+1/2*sum(n^2)+1/2*(10-6*0^2)-1/2*((nn*mean(n)+0)/(nn+10e-6))^2
+  print(alpha)
+  print(beta) 
+  print(lambda) 
+  print(mu0)
+
+  # f.prior = outer(m,s,FUN=dninvg) 
+  f.prior = outer(m,s,mu0,lambda,alpha,beta,FUN=dninvg)
+  
+  # print(summary(f.prior)) 
+  gausslik(n, sigmaS = var(n))*f.prior
+}
+#just for plotting the prior dist. 
+n = n1
+
+#   s = seq(10e-7,10e-5,10e-7)
+#   m = seq(-4,4,0.01)
+
+s = seq(0.01,1000,.01)
+m = seq(0,10000,1) 
+
+t = postInv(n,m,s)  
+contour(m,s,t,asp=1) 
+
+```

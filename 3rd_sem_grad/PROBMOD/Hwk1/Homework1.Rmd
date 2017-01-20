@@ -1,0 +1,154 @@
+---
+title: "Homework1"
+author: "BenLarson"
+date: "January 23, 2016"
+output: html_document
+---
+
+# 1. Problem 1  
+  +1a  $$ E[E[X|Y]] = E[X] $$
+  https://en.wikipedia.org/wiki/Law_of_total_expectation
+  $$E[E[X|Y]] = E_y[\sum_x xP(X=x|Y=y)]$$ 
+  $$ =\sum_y [\sum_x xP(X=x|Y=y)] P(Y=y) $$
+  $$ =\sum_y \sum_x xP(X=x|Y=y) P(Y=y) $$
+  $$ =\sum_x x \sum_y P(X=x|Y=y) P(Y=y) $$
+  $$ =\sum_x x P(X=x|Y=y) $$
+  $$ =\sum_x xP(X=x) = E[X] $$ 
+
+  +1b  $$ Var(X) = E[Var(X|Y)] + Var(E[X|Y]) $$
+  https://en.wikipedia.org/wiki/Law_of_total_variance  
+  Writing this out in 2 steps makes the math easier to see.  
+  Step 1:  
+  $$ E[Var[X|Y] = E[E[X|Y]^2 + [E[X|Y]]^2] = E[E[X^2|Y]] = E[X^2] $$
+  Step 2:
+  $$ Var[E[X|Y]] = E[[E[X|Y]]^2]-[E[E[X|Y]]]^2 = [E[E[X|Y]]]^2 = [E[X]]^2 $$
+  combining we get:  
+  $$ Var(X) = E[X^2] - E[X]^2 $$  
+------------------------------------------------------------------------------------   
+ + 2a $$ g(x)=\int{f(x,y)}dy=\int_{-1}^1{(x+y)dy}=xy+\frac{y^2}{2}=x+\frac{1}{2} $$
+------------------------------------------------------------------------------------   
+ + 2b $$ w(y|x)=\frac{f(x,y)}{g(x)}=\frac{x+y}{x+\frac{1}{2}} \quad 0\le x\le 1 \\ $$
+------------------------------------------------------------------------------------   
+ + 2c Conditional expectation  
+  $$ E[Y|X]=\int_0^1{y p(y|x)dy} $$   using: p(y|x) = $\frac{x+y}{x+1}$  
+  $$ =\int_0^1 y*\frac{x+y}{x+1\2}dy $$  
+  $$ =\int_0^1{\frac{xy}{x+1/2}}dy+\int_0^1{\frac{y^2}{x+1/2}dy} $$
+  $$ \frac{y^2x}{2(x+1/2)}+\frac{y^3}{3(x+1/2)}\big|_0^1= \frac{x}{2x+1}+\frac{1}{3x+3/2} $$
+  + 2d  
+  $$ \sigma_{X|Y} = E[X|Y] - E[X]E[Y] $$
+  $$ E[X]= \int_0^1\int_0^1 x(x+y)dydx = \int_0^1\int_0^1 x^2+xy dydx= \int_0^1 x^2+\frac{x}{2}dx = \frac{x^3}{3}+\frac{x^2}{2*2}\big|_0^1=\frac{7}{12}$$
+  $$ E[Y] = \int_0^1\int_0^1y(x+y)dydx = \int_0^1\int_0^1y^2+xy dydx=\int_0^1\frac{1}{3}+\frac{x}{2}dx =\frac{x}{3}+\frac{x^2}{2*2}\big|_0^1 = \frac{7}{12} $$
+  $$ E[Y|X] = \int_0^1\int_0^1 xy(x+y)dydx=\int_0^1\int_0^1 x^2y+y^2xdydx = \int_0^1\frac{x^2y^2}{2}+\frac{y^3x}{3}dx = \frac{x^3}{6}+\frac{x^2}{6}\big|_0^1 = \frac{1}{3} $$
+  $$ \sigma_{X|Y} = E[X|Y] - E[X]E[Y]=\frac{1}{3} - \frac{7}{12}\frac{7}{12}=\frac{-1}{144}=-0.0069 $$
+------------------------------------------------------------------------------------------------------------------------------   
+# 3. Problem 3  
+  + 3a We find the density function using the equation: $f(w(y))*|w'(y)|$  
+  $$ Y=\sqrt{X} $$
+  $$ X = Y^2 $$ 
+  $$ w'(y) = \frac{dx}{dy} = 2y $$
+  We get the density function by:
+  $$ p(y) = \lambda e^{-\lambda y^2}|2y| = 2y\lambda e^{-\lambda y^2} $$
+------------------------------------------------------------------------------------------------------------------------------   
+  + 3b Cumulative Distribution function:
+  $$ F(y) = P(Y\le y) $$
+  $$ F(y) = \int_0^y \lambda 2ye^{-\lambda y^2}dy $$
+  $$ F(y) = 2\lambda \int_0^y ye^{-\lambda y^2}dy $$
+  $$ = -e^{-\lambda y^2}\big|_0^y $$
+  $$ = -e^{-\lambda y^2}+1 $$
+  Verify F(0) = 0 and $F(\inf)=1$  
+  https://en.wikipedia.org/wiki/Quantile_function  
+  $$ F(0)=-e^{0}+1 = 0 $$
+  and 
+  $$ F(\inf) = e^{-\inf}+1 = 0-1 = 1 $$
+------------------------------------------------------------------------------------------------------------------------------   
+  + 3c Quantile Function $F^{-1}$  
+  $$ 1-e^{-\lambda q^2} = y $$
+  $$ e^{-\lambda q^2} = 1-y $$
+  $$ -\lambda q^2 = ln(1-y) $$
+  $$ q=\sqrt{ \frac{ln(1-y)}{-\lambda}} $$
+------------------------------------------------------------------------------------------------------------------------------   
+  + 3d  find E[Y], Var(Y) 
+  $$ E[Y] = \int y *f(y) dy = \int 2y^2 \lambda e^{-\lambda*y^2}dy $$
+  $$ u = y $$
+  $$ dv = 2\lambda y e^{-\lambda y^2}dy $$
+  $$ du = dy $$
+  $$ v = -e^{-\lambda y^2} $$
+  To intgrate $e^{-x^2}$ used the solution from: 
+  http://math.stackexchange.com/questions/154968/is-there-really-no-way-to-integrate-e-x2
+  $$ \int e^{-x^2} = \sqrt{\pi} $$ or with a constant we can say: $$ \int e^{-\lambda x^2} = \sqrt{\frac{\pi}{\lambda}} $$
+  https://en.wikipedia.org/wiki/Gaussian_integral
+  $$ uv - \int vdu = ye^{-\lambda y^2} - \int -e^{-\lambda y^2}dy $$
+  $$ E[Y] = ye^{-\lambda y^2} + \sqrt{\frac{\pi}{\lambda}} $$
+-----------------------------------------------------------------------------------------------
+  $$ E[Y^2] = \int y^2 *f(x)dx = \int 2y^3\lambda e^{-\lambda*y^2}dy $$
+  $$ u = y^2 $$
+  $$ dv = 2\lambda y e^{-\lambda y^2}dy $$
+  $$ du = 2ydy $$
+  $$ v = -e^{-\lambda y^2} $$
+  $$ uv - \int vdu = -y^2e^{-\lambda y^2} - \int -2ye^{-\lambda y^2}dy $$
+  $$ \int 2ye^{-\lambda y^2}dy = \frac{-1}{\lambda} e^{-\lambda y^2} $$
+  $$ E[Y^2] = -y^2e^{-\lambda y^2}+  \frac{-1}{\lambda} e^{-\lambda y^2}$$ 
+  Variance can now be solved for:
+  $$var(Y) = E[Y^2]-E[Y]^2 $$
+  $$ = -y^2e^{-\lambda y^2}+  \frac{-1}{\lambda} e^{-\lambda y^2} - (ye^{-\lambda y^2} + \sqrt{\frac{\pi}{\lambda}})^2  $$
+-----------------------------------------------------------------------------------------------------------------------------------   
+# 4. Problem 4 Find the MLE for Y from the pdf above
+  $$ p(y)=\lambda 2ye^{-\lambda y^2} $$
+  $$ L(\lambda)=\prod_1^n{\lambda 2y_ie^{-\lambda y_i^2}} $$
+  We take the log of both sides then differentiate to find the MLE for $\lambda$. 
+  $$ \frac{d(ln(L(X)))}{d\lambda}= \frac{d(n ln(2\lambda))}{d\lambda}+\frac{d(ln\prod(y_ie^{-y_i^2\lambda})}{d\lambda} = 0 $$
+  Split the terms and differentiate to make the math easier. 
+  $$ \frac{d(n ln(2\lambda))}{d\lambda}= \frac{n}{\lambda} $$
+  $$ \frac{d(ln \prod{y_i e^{-y_i^2\lambda}})}{d\lambda} = \frac{d(ln(\prod{y_i}) + ln(\prod{e^{-\lambda y_i^2}})))}{d\lambda} = \frac{d(\sum{ln(y_i)} + \sum{ln e^{-\lambda y_i^2}})}{d\lambda} = 0 - \sum{y_i^2} $$
+  combine our results to get:
+  $$ 0 = \frac{n}{\lambda} - \sum y_i^2 $$
+  solve for lambda:
+  $$ \frac{n}{\lambda} -\sum{y_i^2} = 0 $$
+  $$ \lambda = \frac{n}{\sum{y_i^2}} $$ 
+
+-----------------------------------------------------------------------------------------------------------------------------------   
+# Coding Section 
+```{r}
+# This function takes a number a lambda value for the Y = sqrt(X) exponential distribution
+exp_function <- function(n,lam)
+{
+  x <- c(runif(n))
+  Y <-sqrt(log(1-x)/-lam)
+  return (Y)
+}
+Y = exp_function(10000,2)
+hist(Y, freq=FALSE)
+lines(Y,2*2*Y*exp(-2*Y^2), col="red")
+```
+  $$ E[Y] = ye^{-\lambda y^2} + \sqrt{\frac{\pi}{\lambda}} $$
+  $$ Var(Y) = -y^2e^{-\lambda y^2}+  \frac{-1}{\lambda} e^{-\lambda y^2} - (ye^{-\lambda y^2} + \sqrt{\frac{\pi}{\lambda}})^2  $$
+```{r}
+#Calculate the Mean and Variance for the Y distribution 
+mean(Y) 
+#my E[Y] 
+Ey = 1*exp(-2*1) + sqrt(pi/2)
+print (Ey)
+
+var(Y)
+#my var(Y) 
+Vy = exp(-2)-1/2*exp(-2) - (exp(-2)+sqrt(pi/2))^2 - 1/2
+print (Vy) 
+```
+My expected value and variance did not work out correctly. I'm not sure if I'm plugging the values [0,1] correctly or if my math is wrong above. 
+```{r} 
+#Log Likelihood 
+n = 20
+rlz <- exp_function(n,2)
+MLE_Estimate = n/sum(rlz^2)
+l <-c(1:20)/5
+place = array(data = 1, dim = 20) 
+# lglik = n*log(2*l) + sum(log(rlz))+sum(log(exp(-l*rlz^2)))
+lglik <- 0
+for(i in 1:20)
+{
+  lglik[i] <- prod(l[i]*2*rlz*exp(-l[i]*rlz^2)) 
+}
+MLE_Estimate
+plot(l,lglik)
+abline(v=MLE_Estimate, col="red")
+```

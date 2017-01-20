@@ -1,0 +1,23 @@
+\documentclass{article}
+
+\title{Markov Chain Monte Carlo }
+\author{Ben Larson, u0625822}
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+
+\section{1}
+<<>>=
+
+@
+
+\begin{center}
+<<fig=TRUE, echo=FALSE>>=
+
+@
+\end{center}
+
+
+
+
+\end{document}

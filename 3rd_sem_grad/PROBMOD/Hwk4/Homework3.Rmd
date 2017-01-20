@@ -1,0 +1,421 @@
+---
+title: "Homework3"
+author: "BenLarson"
+date: "April 14, 2016"
+output: pdf_document
+---
+
+For the first problem we set up the a gibbs sampler using an Ising model prior and iid gaussian likelihood given a noisy image y. We use the equation:   
+
+$$ U(x) = -\alpha \sum{x_i} -\beta \sum_{<i,j>}{x_ix_j}+\frac{1}{2\sigma}^2 \sum{x_i-y_i}^2 $$
+
+To denoise the image we first create a random image x. The next step is to iterate through this image as you would a markov chain and sample from the bernoulli distribution. The distribution that we sample from is given by finding the probability that the pixel is a 1 or -1 based on exp(-U(x)). Then we compare what the actual pixel value is and find the resulting value to assign to that value. The reason this model works is that it minimizes the energy between pixels that are unlike the given image y while considering the relation to its neighbors. The lowest energy model would then be the denoised image as we can see in the results of our images. 
+
+```{r, echo = FALSE}
+require(png)
+require(knitr) 
+opts_chunk$set(tidy.opts=list(width.cutoff=60))
+opts_knit$set(root.dir= '.')
+
+## Reads a PNG image (as a simple matrix), which for some reason needs to be
+## transposed and flipped to be displayed correctly
+read.image = function(filename)
+{
+  # y = readPNG(system.file(filename,package="png"), TRUE)
+  y = readPNG(filename)
+  print(min(y))
+  print(max(y)) 
+  ## This is just how I encoded pixel intensities
+  ## After this, the labels will be black = -1 and white = +1
+  y = y * 20 - 10
+  # y = y/max(y) 
+  n = nrow(y)
+  
+  ## transpose and flip image
+  t(y)[,n:1]
+}
+
+## Displays an image
+display.image = function(x, col=gray(seq(0,1,1/256)))
+{
+  w = dim(x)[1]
+  h = dim(x)[2]
+  par(mai = c(0,0,0,0))
+  image(x, asp=h/w, col=col)
+}
+##Function from http://stackoverflow.com/questions/36073795/get-neighbors-function-in-r
+## returns up down, right, left 
+get.nbhd <- function(m, i, j) {
+  # get indices
+  idx <- matrix(c(i-1, i+1, i, i, j, j, j+1, j-1), ncol = 2)
+  # set out of bound indices to 0
+  idx[idx[, 1] > nrow(m), 1] <- 0
+  idx[idx[, 2] > ncol(m), 2] <- 0
+  # return (m[idx])
+  return (idx)
+}
+
+ising = function(x,alpha,beta) 
+{
+  # browser()
+  col = dim(x)[1]
+  row = dim(x)[2]
+  x_ = matrix(rbinom(row*col,1,0.5),nrow = col, ncol = row) 
+  x_[x_==0] = -1 
+  for (i in 1:nrow(x)){
+    for (j in 1:ncol(x)){
+      n = get.nbhd(x,i,j)
+      b = beta *sum(x[n])*x[i,j]
+      a = alpha *x[i,j]
+      x_[i,j] = -a - b 
+    }
+  }
+  return (x_) 
+ # apply(M, 1, fun)
+ # apply(M, 2, fun)
+}
+ising_gibb = function(x,alpha,beta,sigma) 
+{
+  col = dim(x)[1]
+  row = dim(x)[2]
+  x_ = matrix(rbinom(row*col,1,0.5),nrow = col, ncol = row) 
+  x_[x_==0] = -1 
+  y = x
+  # y = matrix(0, nrow=col, ncol=row) 
+  vL = c(0) 
+  listIm = list() 
+  for (itr in 1:20) {
+    # print(x == x_)
+    x = x_
+    # display.image(as.matrix(x))
+    for (i in 1:nrow(x)){
+      for (j in 1:ncol(x)){
+        n = get.nbhd(x,i,j)
+        b = beta*sum(x[n])*x[i,j] 
+        a = alpha*x[i,j] 
+        l = 1/(2*sigma^2)*(x[i,j]-y[i,j])^2
+       
+        # P(xi|x = 1)
+        a1 = alpha*1
+        b1 = beta*sum(x[n])
+        l1 = 1/(2*sigma^2)*(1-y[i,j])^2
+        # P(xi|x = -1) 
+        an = alpha*(-1)
+        bn = beta*sum(x[n])*(-1)
+        ln = 1/(2*sigma^2)*(-1-y[i,j])^2
+        
+        n1 = exp(-1*(-a1 - b1 + l1)) # x = +1
+        n2 = exp(-1*(-an - bn + ln)) # x = -1
+        xi = exp(-1*(-a- b+ l))
+        
+        p1 = xi/(n1+n2)
+        p_1 = 1-p1
+        
+        if(x[i,j] == 1)
+        {
+          x_[i,j] = sample(c(1,-1), 1, prob = c(p1,p_1))
+        }else{
+          x_[i,j] = sample(c(-1,1), 1, prob = c(p1,p_1))
+        }
+      }
+    }
+    listIm[[itr]] = x_
+    sigma = sqrt(var(as.vector(x_-y)))
+    v = 1/length(x_)*sum((x_-y)^2) 
+    # print(v) 
+    vL = c(vL, v)
+  }
+  # listIm = tail(listIm,-1) 
+  vL = tail(vL,-1) 
+  # plot(vL) 
+  listIm = tail(listIm, 6-length(listIm))
+  print(sigma) 
+  return (listIm)
+}
+
+#Create a binomial matrix matrix(rbinom(100,1,0.5),nrow = 100, ncol = 100) 
+# require(knitr)
+# # dev.off() 
+# opts_knit$set(root.dir= '.')
+
+# (WD <- getwd())
+# if(!is.null(WD))setwd(WD) 
+# this.dir <- dirname(parent.frame(2)$ofile)
+# setwd(this.dir)
+# print(this.dir)
+im = read.image('noisy-message.png')
+
+# im = read.image('/Users/Benjamin/Documents/PROBMOD/Hwk4/noisy-message.png')
+# 
+display.image(im) 
+i1 = ising(im,-1,1)
+display.image(as.matrix(i1))
+i2 = ising(im,-1,0.3)
+display.image(as.matrix(i2))
+i3 = ising(im,1,30) 
+display.image(as.matrix(i3))
+i4 = ising(im,1,0.3) 
+display.image(as.matrix(i4))
+```
+#1A   
+The above images are with no posterior. Just the alpha and beta terms for the markov image. The first image is the original. 
+```{r, echo = FALSE}
+opts_knit$set(root.dir= '.')
+ig1 = ising_gibb(im,-0.07,1, 0.2)
+ig1 = apply(simplify2array(ig1), 1:2, mean)
+display.image(as.matrix(ig1)) 
+
+im1 = read.image('noisy-yinyang.png')
+# im1 = read.image('/Users/Benjamin/Documents/PROBMOD/Hwk4/noisy-yinyang.png')
+
+ig2 = ising_gibb(im1,-0.07, 1, 0.2)
+ig2 = apply(simplify2array(ig2), 1:2, mean)
+display.image(as.matrix(ig2)) 
+```
+## 1B   
+These are the results for the noisy images, Markov and Yingyang. The best alpha and beta I found were:
+$$\alpha = -0.07, \beta = 1, \sigma = 0.2$$
+
+## 1C  
+To estimate $\sigma$ from each iteration I took an initial value and found a new image. This new image I subtracted from the noisy image y and then used the variance of this result to pass into the next iteration. The final value I found was ** $\sigma$ = 1.25 **. 
+
+#2A  
+$$p(\beta|y;x,\sigma) \propto \prod_{i=1}^n p(y_i | \beta; x_i)p(\beta;\sigma)$$
+
+$$\propto \prod_{i=1}^n \frac{1}{1 + e^{-x_i^T \beta}}^y (1-e^{-x_i^T \beta})^{(1-y)} e^{\frac{1}{2*\sigma^2}\sum{0-\beta}^2}$$
+$$= log(\prod_{i=1}^n \frac{1}{1 + e^{-x_i^T \beta}}^y (1-e^{-x_i^T \beta})^{(1-y)} e^{\frac{1}{2*\sigma^2}\sum{0-\beta}^2})$$
+for simplicity I will call $X = -x_i^T \beta$
+$$=\sum[ y_i log(\frac{1}{1+e^X})+(1-y_i)log(1-\frac{1}{1+e^X})] - \frac{1}{2\sigma^2}(B^T B)^2$$
+$$=\sum[ -y_i log(1+e^X)+(1-y_i)X-log(1+e^X)+y_ilog(1+e^X)] - \frac{1}{2\sigma^2}(B^T B)^2 $$
+$$=\sum[ -(1-y_i)X-log(1+e^X)] - \frac{1}{2\sigma^2}(B^T B)^2 $$
+We now plug in X and realize that the log is on the left hand side of the equation to show that this is equivalent to $exp(-U(\beta))$.  
+$$log(U(\beta)) = \sum[ (1-y_i)x_i^T \beta-log(1+e^{-x_i^T \beta})] - \frac{1}{2\sigma^2}(B^T B)^2 $$
+$$U(\beta) = exp{ \sum[ (1-y_i)x_i^T \beta-log(1+e^{-x_i^T \beta})] - \frac{1}{2\sigma^2}(B^T B)^2 } $$
+
+#2C  
+To implement the code for the hamiltonian function from Radford Neal paper we need to define the function "U" and "grad_U". We have our U function from above. This takes as input the data x, y, and our vector beta. Beta can be a scalar or vector, but in our iris data set it was a vector. The U function will give us an potential energy in the hamiltonian equations. GradU will give us a position, or position vector in our case. To get gradU we take the derivate of U with respect to beta:  
+$$d/d\beta U(\beta) = d/d\beta exp{ \sum[ (1-y_i)x_i^T \beta-log(1+e^{-x_i^T \beta})] - \frac{1}{2\sigma^2}(B^T B)^2 } $$
+Intermediate steps: 
+$$d/d \beta(x_i^T \beta)=(x_i^T) ^T=x_i $$
+$$d/d \beta(y_ix_i^T \beta)=y_i (x_i^T)^T=y_i x_i $$
+$$d/d \beta(log(x)) = 1/x * dx = \frac{1}{1+e^{-x_i^T\beta}}*e^{-x_i^T\beta}*(-x_i)= \frac{x_i^T e^{-x_i^T \beta}}{1+e^{-x_i^T \beta}} $$
+$$d/d \beta = \frac{1}{2\sigma^2}(B^T B)^2 = \frac{2\beta}{2\sigma^2} = \frac{\beta}{\sigma^2}  $$
+Finally together we get: 
+$$d/d \beta U(\beta) = \sum[ x_i - y_i x_i^T- \frac{x_i^T e^{-x_i^T \beta}}{1+e^{-x_i^T \beta}}] - \frac{\beta}{\sigma^2}  $$
+```{r, echo=FALSE}
+## This is the same unormalized pdf we sampled from in MetropolisHastings.r
+
+# 
+# clamp = function(x, a, b) { (x<a)*a + (x>b)*b + (x>=a)*(x<=b)*x }
+
+## U(q) and its derivative
+virgin <- subset(iris, Species == "virginica", select=c(Sepal.Length,Sepal.Width,Petal.Length,Petal.Width))
+versi <- subset(iris, Species == "versicolor", select=c(Sepal.Length,Sepal.Width,Petal.Length,Petal.Width))
+
+train_virgin <- as.matrix(virgin[1:30,])
+train_virgin <- cbind(train_virgin, 1)
+train_versi <- as.matrix(versi[1:30,])
+train_versi <- cbind(train_versi, 1)
+x = rbind(train_virgin,train_versi)
+# y = rbind(subset(iris,Species=="virginica", select = c(Species)),subset(iris,Species=="versicolor",select=c(Species)))
+y = cbind(matrix(1, ncol = 30, nrow = 1), matrix(0, ncol=30, nrow=1) ) 
+y = t(y) 
+
+test_virgin <- as.matrix(virgin[31:50,])
+test_virgin <- cbind(test_virgin, 1)
+test_versi <- as.matrix(versi[31:50,])
+test_versi <- cbind(test_versi, 1)
+xt= rbind(test_virgin,test_versi) 
+
+yt = rbind(matrix(1,20,1), matrix(0,20,1) ) 
+
+
+U = function(B,sigma){
+  r = 0
+  for (i in 1:length(y))
+  {
+    r1 =  t(x[i,])%*%B
+    r2 = -y[i]*t(x[i,])%*%B
+    r3 = log(1+exp(-t(x[i,])%*%B))
+    r = r+r1+r2+r3
+  }
+  r = r + 1/(2*sigma^2)*(t(B)%*%B)
+  return(r) 
+}
+grad_U = function(B,sigma) {
+  r = c(0,0,0,0,0) 
+  for (i in 1:length(y))
+  {
+    r1 =  x[i,]
+    r2 =  -t(y[i])*x[i,]
+    r3 = -x[i,]*exp(-x[i,]%*%B)/(1+exp(-x[i,]%*%B))
+    r = r+r1+r2+r3
+  }
+  r4 = B/sigma^2
+  r = r+r4 
+  return (r) 
+}
+## Code from Radford Neal's paper (slightly modified, adds animation)
+HMC = function (U, grad_U, epsilon, L, current_q, anim = FALSE)
+{
+  sigma = 1
+  q = current_q
+  p = rnorm(length(q),0,1) # independent standard normal variates
+  current_p = p
+  
+  qList = q
+  pList = p
+  
+  ## Make a half step for momentum at the beginning
+  p = p - epsilon * grad_U(q,sigma) / 2
+  
+  ## Alternate full steps for position and momentum
+  for(i in 1:(L-1))
+  {
+    ## Make a full step for the position
+    q = q + epsilon * p
+    
+    ## Make a full step for the momentum, except at end of trajectory
+    p = p - epsilon * grad_U(q,sigma)
+  }
+  
+  q = q + epsilon * p
+  
+  ## Make a half step for momentum at the end.
+  p = p - epsilon * grad_U(q,sigma) / 2
+  
+  ## Negate momentum at end of trajectory to make the proposal symmetric
+  p = -p
+  
+  ## Evaluate potential and kinetic energies at start and end of trajectory
+  current_U = U(current_q,sigma)
+  current_K = sum(current_p^2) / 2
+  proposed_U = U(q,sigma)
+  proposed_K = sum(p^2) / 2
+  
+  ## Accept or reject the state at end of trajectory, returning either
+  ## the position at the end of the trajectory or the initial position
+
+  if(current_U + current_K > proposed_U + proposed_K)
+    return(q) # reject
+  else if (runif(1) < exp(current_U-proposed_U+current_K-proposed_K))
+    return (q) # accept
+  else
+    return (current_q) # reject
+}
+
+trace.plot = function(q)
+{
+  plot(1:length(q), q, type='l')
+}
+
+hist.plot = function(q)
+{
+  t = seq(-2, 2, 0.01)
+  
+  ## Approximate the normalizing constant (for purposes of plotting the pdf)
+  C = sum(f(t)) * 0.01
+  
+  hist(q, freq=FALSE, breaks=80)
+  t = seq(-2, 2, 0.01)
+  lines(t, f(t) / C, lwd = 3, col = 'red')
+}
+
+crazy.example = function(numBurn = 20, numSamples = 50, epsilon = 0.05, L =100)
+{
+  q = 0
+  q = matrix(1, ncol = 1, nrow = 5) 
+  ## Burn-in
+  for(i in 1:numBurn)
+    q = HMC(U, grad_U, epsilon, L, q)
+  rejectCount = 0
+  ## Sampling
+  q = cbind(q,q) 
+  for(i in 1:(numSamples-1))
+  { 
+    q = cbind(q ,HMC(U, grad_U, epsilon, L, q[,i]))
+    if(q[i] == q[i+1])
+      rejectCount = rejectCount + 1
+  }
+  
+  cat(paste("Acceptance rate =", 1 - rejectCount / numSamples, "\n"))
+  
+  q
+}
+
+testsamples = function(ql){
+  q = ql[,length(ql[1,])] 
+  ytild = c(0)
+  theta = matrix(0, ncol = 1, nrow = length(yt)) 
+  correct = 0 
+  # go through each beta, beta = q 
+  for (j in 1:length(ql[1,])){
+    q = ql[,j]
+    thetav=c() 
+    for (i in 1:length(yt)){
+      # for the first beta how well did it classify?
+      n1 = (1/( 1+ exp( -xt[i,]%*%q )) )
+      if (n1>0.5){prob = 1}
+      else{prob = 0} 
+      ytild = c(ytild, prob)
+      #find zero 1 loss 
+      if (prob == y[i])
+        correct = correct+1
+      thetav = c(thetav, n1)
+    } 
+    correct = correct/length(yt) #divide by the total to get expected value  
+    ytild = ytild[2:length(ytild)]  #just to know what ytild is 
+    theta = cbind(theta,thetav) # for monte carlo estimator 
+  }
+  return(list('theta'=theta,'correct'=correct)) 
+}
+ql = crazy.example()
+
+#plot the trace plots for each beta variable seperately 
+x = 1:length(ql[1,])
+```
+```{r}
+plot(x,ql[1,],type="l")
+```
+```{r}
+hist(ql[1,],freq=FALSE,breaks=40)
+```
+```{r}
+plot(x,ql[2,],type="l")
+```
+```{r}
+hist(ql[2,],freq=FALSE,breaks=40)
+```
+```{r}
+plot(x,ql[3,],type="l")
+```
+```{r}
+hist(ql[3,],freq=FALSE,breaks=40)
+```
+```{r}
+plot(x,ql[4,],type="l")
+```
+```{r}
+hist(ql[4,],freq=FALSE,breaks=40) 
+#
+resul = testsamples(ql) 
+correct = resul$correct
+theta = resul$theta
+theta = rowMeans(theta) 
+print('Monte Carlo estimate of p(~y|y)')
+plot(1:length(theta),theta)
+lines(yt)
+print(mean(theta))
+print("Zero-one Loss") 
+print(correct) 
+```
+# 2: D,E, and F
+IMPORTANT NOTE, 0 is the classifier for versicolor, 1 is the classifier for virignica. So in the Monte Carlo plot the first 20 indexes should be virinica, and 20:40 are versicolor. This is consitent with all my data. 
+
+Part D. We are asked to find the monte carlo estimate of the p(y~|y) for each testing data point. From the hamiltonian sampling I returned a vector of possible classification functions beta. Each row was a classifier for the entire data set. With each row lower in the beta matrix the classifier gets better and better as a result of more sampling from the hamiltonian code. I then saved each possible y~ for each beta, and averaged the probability for each y~. This gives us a final vector of how close our beta vectors came to assigning the right probability to the true data set. 
+
+Part E. Each trace plot is over each beta variable from the list of betas returned by the hamiltonian. I noticed that because the trace plots have a lot of movement up and down that is indicative of high acceptance rate.  
+
+Part F. See ("Correct = ___"") above. Comparing the class labels I found iteratively what the correct number of classificaions were for each beta value over all test data. So if it labeled correctly I gave it a 1, else I skipped. Then I divided by the total number of test data that I was applying this classifcation to to get the expected value. 
+Choosing the parameters I found that high epsilon would give inf values. This is probably due to the step size of the hamiltonian creating huge values that were putting the position vectors out of a reasonable range. I didn't have time to really change simga a lot, and high values past a certain point didn't make a noticable difference I could understand. 
+$$\sigma = 1, \epsilon = 0.05, L = 100$$
